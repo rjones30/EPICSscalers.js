@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>GlueX Scalers Display and Animation</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+<style type='text/css'>
+    table.underline-headers { border-collapse: collapse; }
+    table.underline-headers th { border-bottom: 1px solid black; }
+    tr.overline-row td { border-top: 1px solid black; }
+    tr.underline-row td { border-bottom: 1px solid black; }
+</style>
+</head>
+
+<body ng-app="GlueXscalers" ng-controller="scalersCtrl">
+<h1 align="center">GlueX Scalers Display and Animation</h1>
+<form>
+
+<!-- EPICS variable browser section -->
+
+<div class="w3-row">
+  <div class="w3-col l2 w3-container"><p></p></div>
+  <div class="w3-col l10 w3-container">
+    <table style="display:inline-block; max-width:500px; vertical-align:top">
+      <tr><td>EPICS variables</td></tr>
+      <tr><td>Group:
+        <select ng-model="EPICSgroup" 
+                ng-change="EPICSgroupSelected()"
+                ng-options="x for x in EPICSgroups">
+        </select>
+      </td></tr>
+      <tr ng-show="EPICSgroup != nogroup"><td>Search:
+        <input type="text" ng-model="channelFilterRE" size="25" 
+               placeholder="grep-style regular expression"
+               ng-change="filterChannels()">
+        </input>
+      </td></tr>
+      <tr><td ng-if="channelPages.length > 1">
+        <button ng-repeat="$index in channelPages" ng-click="channelPageSet($index)"
+                ng-style="($index == channelPageSelected) && {'background-color':'yellow'} || {'padding':'1px 6px'}">
+          {{$index + 1}}
+        </button>
+      </td></tr>
+    </table>
+    <table style="display:inline-block; max-width:500px vertical-align:top" class="underline-headers" ng-show="EPICSgroup != nogroup">
+      <tr>
+        <th valign="bottom">variable name</th>
+        <th valign="bottom" width="90">length</th>
+        <th valign="bottom" width="70">x axis?</th>
+        <th valign="bottom" width="70">y axis?</th>
+      </tr>
+      <tr ng-repeat="evar in EPICSvars | filter:searchFilter | limitTo:channelPageSize:channelPageStart track by evar.name">
+        <td><span ng-bind="evar.name"></span></td>
+        <td align="right" style="padding-right: 30px"><span ng-bind="evar.size"></span></td>
+        <td align="center"><input type="checkbox" ng-model="evar.add2x"/></td>
+        <td align="center"><input type="checkbox" ng-model="evar.add2y"/></td>
+      </tr>
+      <tr class="overline-row">
+        <td><b>Select / unselect all</b></td>
+        <td></td>
+        <td align="center"><input type="checkbox" ng-model="selectAllX" ng-change="channelSelectAllX()"/></td>
+        <td align="center"><input type="checkbox" ng-model="selectAllY" ng-change="channelSelectAllY()"/></td>
+      </tr>
+      <tr class="underline-row">
+        <td><b>Totals</b></td>
+        <td align="right" style="padding-right: 30px">{{ channelCount() }}</td>
+        <td align="center">{{ channelsSelectedX }}</td>
+        <td align="center">{{ channelsSelectedY }}</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<!-- Time span selection -->
+
+<div class="w3-row">
+  <br/>
+  <div class="w3-col l2 w3-container"><p></p></div>
+  <h4 class="w3-col l10 w3-container">Time span selection: </h4>
+</div>
+<div class="w3-row">
+  <div class="w3-col l2 w3-container"><p></p></div>
+  <div class="w3-col l10 w3-container">
+    <table style="display:inline-block">
+    <tr><td>from</td><td align="right">
+      <button ng-click="setStartRunStart()">start</button>
+      <input type="number" min="1" max="999999999"
+             placeholder="run number" ng-model="runStart">
+      </input>
+      <button ng-click="setStartRunEnd()">end</button>
+    </td></tr>
+    <tr><td colspan="2">
+      <input type="datetime-local" name="timeStart"
+              step="0.001" ng-model="timeStart"
+              ng-change="setTimeSpanTimes()">
+      </input>
+    </td></tr>
+    </table>
+    <table style="display:inline-block" width="50px"></table>
+    <table style="display:inline-block">
+    <tr><td>until</td><td align="right">
+      <button ng-click="setEndRunStart()">start</button>
+      <input type="number" min="1" max="999999999"
+             placeholder="run number" ng-model="runEnd">
+      </input>
+      <button ng-click="setEndRunEnd()">end</button>
+    </td></tr>
+    <tr><td colspan="2">
+      <input type="datetime-local" name="timeEnd"
+             step="0.001" ng-model="timeEnd"
+             ng-change="setTimeSpanTimes()">
+    </input>
+    </td></tr>
+    </table>
+  </div>
+</div>
+
+</form>
+<script>
+var app = angular.module('GlueXscalers', []);
+app.controller('scalersCtrl', function($scope, $http) {
+    $http({ method : "GET", url : "?request=list_groups" }).then(
+        function(response) {
+            $scope.EPICSgroups = {};
+            $scope.nogroup = "...choose one";
+            $scope.EPICSgroups[0] = $scope.nogroup;
+            for (var name in response.data) {
+                index = response.data[name];
+                $scope.EPICSgroups[index] = name;
+            }
+            $scope.EPICSgroup = $scope.nogroup;
+        },
+        function(response) {
+            $scope.EPICSgroups = {};
+            $scope.nogroup = "no groups found";
+            $scope.EPICSgroups[0] = $scope.nogroup;
+            $scope.EPICSgroup = $scope.nogroup;
+        }
+    );
+
+    $scope.EPICSgroupSelected = function() {
+        var gindex = 0;
+        for (var key in $scope.EPICSgroups) {
+          if ($scope.EPICSgroup == $scope.EPICSgroups[key]) {
+            gindex = key;
+            break;
+          }
+        }
+        var querystring = "?request=list_channels&group=" + gindex.toString();
+        $http({ method : "GET", url : querystring }).then(
+            function(response) {
+                $scope.EPICSvars = response.data;
+                $scope.filterChannels();
+            },
+            function(response) {
+                $scope.EPICSvars = [];
+            }
+        );
+    };
+
+    $scope.filterChannels = function() {
+        var visible = 0;
+        if ($scope.channelFilterRE && $scope.channelFilterRE.length > 0) {
+            var re = RegExp($scope.channelFilterRE);
+            for (var i in $scope.EPICSvars) {
+                if (re.exec($scope.EPICSvars[i].name)) {
+                    $scope.EPICSvars[i].hide = false;
+                    ++visible;
+                }
+                else  {
+                    $scope.EPICSvars[i].hide = true;
+                }
+            }
+        }
+        else {
+           visible = $scope.EPICSvars.length;
+        }
+        $scope.channelPageStart = 0;
+        $scope.channelPageSize = 15;
+        var pages = visible / $scope.channelPageSize;
+        if (pages / 10 > $scope.channelPageSize) 
+            $scope.channelPageSize = Math.ceil(Math.sqrt(visible / 20));
+        pages = Math.ceil(visible / $scope.channelPageSize);
+        $scope.channelPages = [];
+        for (var page = 0; page < pages; ++page)
+            $scope.channelPages.push(page);
+        $scope.channelPageSelected = 0;
+        $scope.channelsSelectedX = 0;
+        $scope.channelsSelectedY = 0;
+        $scope.channelTotal = 0;
+        $scope.selectAllX = false;
+        $scope.selectAllY = false;
+    };
+
+    $scope.searchFilter = function(evar) {
+        if ($scope.channelFilterRE && $scope.channelFilterRE.length > 0) {
+            var re = RegExp($scope.channelFilterRE);
+            return re.test(evar.name);
+        }
+        return true;
+    };
+
+    $scope.channelPageSet = function(index) {
+        $scope.channelPageStart = index * $scope.channelPageSize;
+        $scope.channelPageSelected = index;
+    };
+
+    $scope.channelCount = function() {
+        var re;
+        if ($scope.channelFilterRE && $scope.channelFilterRE.length > 0)
+            re = RegExp($scope.channelFilterRE);
+        $scope.totalSize = 0;
+        $scope.channelsSelectedX = 0;
+        $scope.channelsSelectedY = 0;
+        for (var i in $scope.EPICSvars) {
+            if (!re || re.exec($scope.EPICSvars[i].name)) {
+                $scope.totalSize += $scope.EPICSvars[i].size;
+                if ($scope.EPICSvars[i].add2x)
+                    ++$scope.channelsSelectedX;
+                if ($scope.EPICSvars[i].add2y)
+                    ++$scope.channelsSelectedY;
+            }
+        }
+        return $scope.totalSize;
+    };
+
+    $scope.channelSelectAllX = function() {
+        var re;
+        if ($scope.channelFilterRE && $scope.channelFilterRE.length > 0)
+            re = RegExp($scope.channelFilterRE);
+        for (var i in $scope.EPICSvars)
+            if (!re || re.exec($scope.EPICSvars[i].name))
+                $scope.EPICSvars[i].add2x = $scope.selectAllX;
+    };
+
+    $scope.channelSelectAllY = function() {
+        var re;
+        if ($scope.channelFilterRE && $scope.channelFilterRE.length > 0)
+            re = RegExp($scope.channelFilterRE);
+        for (var i in $scope.EPICSvars)
+            if (!re || re.exec($scope.EPICSvars[i].name))
+                $scope.EPICSvars[i].add2y = $scope.selectAllY;
+    };
+
+    $scope.setStartRunStart = function() {
+        if ($scope.runStart) {
+            $scope.getRunTimes($scope.runStart).then(function(response) {
+                if (response.data.starttime) {
+                    var t = response.data.starttime;
+                    $scope.timeStart = new Date(t * 1000);
+                    $scope.runStart = response.data.run;
+                    if (!$scope.runEnd || $scope.runEnd < $scope.runStart) {
+                        $scope.runEnd = $scope.runStart;
+                    }
+                }
+            });
+        }
+    };
+
+    $scope.setStartRunEnd = function() {
+        if ($scope.runStart) {
+            $scope.getRunTimes($scope.runStart).then(function(response) {
+                if (response.data.endtime) {
+                    var t = response.data.endtime;
+                    $scope.timeStart = new Date(t * 1000);
+                    $scope.runStart = response.data.run;
+                    if (!$scope.runEnd || $scope.runEnd < $scope.runStart) {
+                        $scope.runEnd = $scope.runStart + 1;
+                    }
+                }
+            });
+        }
+    };
+
+    $scope.setEndRunStart = function() {
+        if ($scope.runEnd) {
+            $scope.getRunTimes($scope.runEnd).then(function(response) {
+                if (response.data.starttime) {
+                    var t = response.data.starttime;
+                    $scope.timeEnd = new Date(t * 1000);
+                    $scope.runEnd = response.data.run;
+                    if (!$scope.runStart || $scope.runStart > $scope.runEnd) {
+                        $scope.runStart = $scope.runEnd - 1;
+                    }
+                }
+            });
+        }
+    };
+
+    $scope.setEndRunEnd = function() {
+        if ($scope.runEnd) {
+            $scope.getRunTimes($scope.runEnd).then(function(response) {
+                if (response.data.endtime) {
+                    var t = response.data.endtime;
+                    $scope.timeEnd = new Date(t * 1000);
+                    $scope.runEnd = response.data.run;
+                    if (!$scope.runStart || $scope.runStart > $scope.runEnd) {
+                        $scope.runStart = $scope.runEnd;
+                    }
+                }
+            });
+        }
+    };
+
+    $scope.setTimeSpanTimes = function() {
+        console.log("set time span");
+    };
+
+    $scope.getRunTimes = function(run) {
+        var querystring = "?request=run_times&run=" + run.toString();
+        return $http({ method : "GET", url : querystring })
+        .catch(function() {
+            console.log("request run_times returns error");
+        });
+    };
+
+    $scope.channelPages = 0;
+    $scope.channelPageSize = 15;
+    $scope.channelPageCount = 0;
+    $scope.channelPageStart = 0;
+    $scope.channelPageSelected = 0;
+    $scope.timeStart = new Date();
+    $scope.timeEnd = new Date();
+    $scope.timeStart = new Date($scope.timeStart.getTime() - 3600000);
+});
+
+</script>
+
+</body>
+</html>
