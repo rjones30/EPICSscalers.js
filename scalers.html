@@ -135,7 +135,13 @@
   </div>
 </div>
 
+<!-- x axis specification -->
+
+<div class="w3-row">
+  <div class="w3-col l2 w3-container"><p></p></div>
+  <div class="w3-col l10 w3-container">
 </form>
+
 <script>
 var app = angular.module('GlueXscalers', []);
 app.controller('scalersCtrl', function($scope, $http) {
@@ -363,7 +369,9 @@ app.controller('scalersCtrl', function($scope, $http) {
                         $scope.timeSpan.timeStart.getTime()) / 1000;
         if (duration > 0) {
             var delta = $scope.timeSpan.sampleStep;
-            $scope.timeSpan.sampleCount = Math.ceil((duration + 0.5) / delta);
+            var count = Math.floor(duration / delta);
+            count = (count > 0)? count : 1;
+            $scope.timeSpan.sampleCount = count;
         }
     };
 
