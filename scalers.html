@@ -4,7 +4,9 @@
 <title>GlueX Scalers Display and Animation</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+<script
+  src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js">
+</script>
 <style type='text/css'>
     table.underline-headers { border-collapse: collapse; }
     table.underline-headers th { border-bottom: 1px solid black; }
@@ -37,30 +39,44 @@
         </input>
       </td></tr>
       <tr><td ng-if="channelPages.length > 1">
-        <button ng-repeat="$index in channelPages" ng-click="channelPageSet($index)"
-                ng-style="($index == channelPageSelected) && {'background-color':'yellow'} || {'padding':'1px 6px'}">
+        <button ng-repeat="$index in channelPages" 
+                ng-click="channelPageSet($index)"
+                ng-style="($index == channelPageSelected) && 
+                          {'background-color':'yellow'} || 
+                          {'padding':'1px 6px'}">
           {{$index + 1}}
         </button>
       </td></tr>
     </table>
-    <table style="display:inline-block; max-width:500px vertical-align:top" class="underline-headers" ng-show="EPICS.group != EPICS.nogroup">
+    <table style="display:inline-block; max-width:500px vertical-align:top"
+           class="underline-headers" ng-show="EPICS.group != EPICS.nogroup">
       <tr>
         <th valign="bottom">variable name</th>
         <th valign="bottom" width="90">length</th>
         <th valign="bottom" width="70">x axis?</th>
         <th valign="bottom" width="70">y axis?</th>
       </tr>
-      <tr ng-repeat="evar in EPICS.vars | filter:searchFilter | limitTo:channelPageSize:channelPageStart track by evar.name">
+      <tr ng-repeat="evar in EPICS.vars | filter:searchFilter | 
+                     limitTo:channelPageSize:channelPageStart
+                     track by evar.name">
         <td><span ng-bind="evar.name"></span></td>
-        <td align="right" style="padding-right: 30px"><span ng-bind="evar.size"></span></td>
+        <td align="right" style="padding-right: 30px">
+          <span ng-bind="evar.size"></span>
+        </td>
         <td align="center"><input type="checkbox" ng-model="evar.add2x"/></td>
         <td align="center"><input type="checkbox" ng-model="evar.add2y"/></td>
       </tr>
       <tr class="overline-row">
         <td><b>Select / unselect all</b></td>
         <td></td>
-        <td align="center"><input type="checkbox" ng-model="EPICS.selectAllX" ng-change="channelSelectAllX()"/></td>
-        <td align="center"><input type="checkbox" ng-model="EPICS.selectAllY" ng-change="channelSelectAllY()"/></td>
+        <td align="center">
+          <input type="checkbox" ng-model="EPICS.selectAllX"
+                                 ng-change="channelSelectAllX()"/>
+        </td>
+        <td align="center">
+          <input type="checkbox" ng-model="EPICS.selectAllY"
+                                 ng-change="channelSelectAllY()"/>
+        </td>
       </tr>
       <tr class="underline-row">
         <td><b>Totals</b></td>
@@ -118,14 +134,18 @@
 <div class="w3-row">
   <div class="w3-col l2 w3-container"><p></p></div>
   <div class="w3-col l10 w3-container">
-  <p ng-if="timeSpan.timeStart && timeSpan.timeEnd && timeSpan.timeEnd > timeSpan.timeStart">
-  Time span is {{ (timeSpan.timeEnd.getTime() - timeSpan.timeStart.getTime()) / 1000 }}
+  <p ng-if="timeSpan.timeStart && timeSpan.timeEnd && 
+            timeSpan.timeEnd > timeSpan.timeStart">
+  Time span is 
+  {{ (timeSpan.timeEnd.getTime() - timeSpan.timeStart.getTime()) / 1000 }}
   seconds spanned by
   <input type="number" min="1" max="999999" step="1"
-         ng-model="timeSpan.sampleCount" ng-change="setTimeSampleCount()"></input>
+         ng-model="timeSpan.sampleCount" ng-change="setTimeSampleCount()">
+  </input>
   evenly spaced samples of
   <input type="number" min="1" max="9999" step="1"
-         ng-model="timeSpan.sampleWidth" ng-change="setTimeSampleWidth()"></input>
+         ng-model="timeSpan.sampleWidth" ng-change="setTimeSampleWidth()">
+  </input>
   seconds each, total coverage is
   {{
     (1e5 * timeSpan.sampleCount * timeSpan.sampleWidth / 
@@ -135,12 +155,23 @@
   </div>
 </div>
 
-<!-- x axis specification -->
+<!-- axis specifications -->
 
 <div class="w3-row">
   <div class="w3-col l2 w3-container"><p></p></div>
-  <div class="w3-col l10 w3-container">
+  <div class="w3-col l4 w3-container">
+  <h4 align="center">X axis specification</h4>
+  <input type="checkbox" ng-model="Xaxis.isTime">
+  </div>
+  <div class="w3-col l4 w3-container">
+  <h4 align="center">Y axis specification</h4>
+  </div>
+  <div class="w3-col l2 w3-container"><p></p></div>
 </form>
+
+
+
+<!-- Angular.js application code begins here -->
 
 <script>
 var app = angular.module('GlueXscalers', []);
@@ -186,7 +217,9 @@ app.controller('scalersCtrl', function($scope, $http) {
 
     $scope.filterChannels = function() {
         var visible = 0;
-        if ($scope.EPICS.channelFilterRE && $scope.EPICS.channelFilterRE.length > 0) {
+        if ($scope.EPICS.channelFilterRE && 
+            $scope.EPICS.channelFilterRE.length > 0)
+        {
             var re = RegExp($scope.EPICS.channelFilterRE);
             for (var i in $scope.EPICS.vars) {
                 if (re.exec($scope.EPICS.vars[i].name)) {
@@ -219,7 +252,9 @@ app.controller('scalersCtrl', function($scope, $http) {
     };
 
     $scope.searchFilter = function(evar) {
-        if ($scope.EPICS.channelFilterRE && $scope.EPICS.channelFilterRE.length > 0) {
+        if ($scope.EPICS.channelFilterRE && 
+            $scope.EPICS.channelFilterRE.length > 0)
+        {
             var re = RegExp($scope.EPICS.channelFilterRE);
             return re.test(evar.name);
         }
@@ -233,8 +268,11 @@ app.controller('scalersCtrl', function($scope, $http) {
 
     $scope.channelCount = function() {
         var re;
-        if ($scope.EPICS.channelFilterRE && $scope.EPICS.channelFilterRE.length > 0)
+        if ($scope.EPICS.channelFilterRE && 
+            $scope.EPICS.channelFilterRE.length > 0)
+        {
             re = RegExp($scope.EPICS.channelFilterRE);
+        }
         $scope.EPICS.totalSize = 0;
         $scope.EPICS.channelsSelectedX = 0;
         $scope.EPICS.channelsSelectedY = 0;
@@ -252,8 +290,11 @@ app.controller('scalersCtrl', function($scope, $http) {
 
     $scope.channelSelectAllX = function() {
         var re;
-        if ($scope.EPICS.channelFilterRE && $scope.EPICS.channelFilterRE.length > 0)
+        if ($scope.EPICS.channelFilterRE &&
+            $scope.EPICS.channelFilterRE.length > 0)
+        {
             re = RegExp($scope.EPICS.channelFilterRE);
+        }
         for (var i in $scope.EPICS.vars)
             if (!re || re.exec($scope.EPICS.vars[i].name))
                 $scope.EPICS.vars[i].add2x = $scope.EPICS.selectAllX;
@@ -261,8 +302,11 @@ app.controller('scalersCtrl', function($scope, $http) {
 
     $scope.channelSelectAllY = function() {
         var re;
-        if ($scope.EPICS.channelFilterRE && $scope.EPICS.channelFilterRE.length > 0)
+        if ($scope.EPICS.channelFilterRE &&
+            $scope.EPICS.channelFilterRE.length > 0)
+        {
             re = RegExp($scope.EPICS.channelFilterRE);
+        }
         for (var i in $scope.EPICS.vars)
             if (!re || re.exec($scope.EPICS.vars[i].name))
                 $scope.EPICS.vars[i].add2y = $scope.EPICS.selectAllY;
@@ -270,7 +314,8 @@ app.controller('scalersCtrl', function($scope, $http) {
 
     $scope.setStartRunStart = function() {
         if ($scope.timeSpan.runStart) {
-            $scope.getRunTimes($scope.timeSpan.runStart).then(function(response) {
+            $scope.getRunTimes($scope.timeSpan.runStart).then(function(response)
+            {
                 if (response.data.starttime) {
                     var t = response.data.starttime;
                     $scope.timeSpan.timeStart = new Date(t * 1000);
@@ -288,7 +333,8 @@ app.controller('scalersCtrl', function($scope, $http) {
 
     $scope.setStartRunEnd = function() {
         if ($scope.timeSpan.runStart) {
-            $scope.getRunTimes($scope.timeSpan.runStart).then(function(response) {
+            $scope.getRunTimes($scope.timeSpan.runStart).then(function(response)
+            {
                 if (response.data.endtime) {
                     var t = response.data.endtime;
                     $scope.timeSpan.timeStart = new Date(t * 1000);
@@ -306,7 +352,8 @@ app.controller('scalersCtrl', function($scope, $http) {
 
     $scope.setEndRunStart = function() {
         if ($scope.timeSpan.runEnd) {
-            $scope.getRunTimes($scope.timeSpan.runEnd).then(function(response) {
+            $scope.getRunTimes($scope.timeSpan.runEnd).then(function(response)
+            {
                 if (response.data.starttime) {
                     var t = response.data.starttime;
                     $scope.timeSpan.timeEnd = new Date(t * 1000);
@@ -324,7 +371,8 @@ app.controller('scalersCtrl', function($scope, $http) {
 
     $scope.setEndRunEnd = function() {
         if ($scope.timeSpan.runEnd) {
-            $scope.getRunTimes($scope.timeSpan.runEnd).then(function(response) {
+            $scope.getRunTimes($scope.timeSpan.runEnd).then(function(response)
+            {
                 if (response.data.endtime) {
                     var t = response.data.endtime;
                     $scope.timeSpan.timeEnd = new Date(t * 1000);
@@ -392,7 +440,8 @@ app.controller('scalersCtrl', function($scope, $http) {
 
     $scope.timeSpan = {};
     $scope.timeSpan.timeEnd = new Date();
-    $scope.timeSpan.timeStart = new Date($scope.timeSpan.timeEnd.getTime() - 3600000);
+    var tend = $scope.timeSpan.timeEnd.getTime();
+    $scope.timeSpan.timeStart = new Date(tend - 3600000);
     $scope.timeSpan.sampleCount = 100;
     $scope.timeSpan.sampleWidth = 1;
     $scope.setTimeSampleCount();
