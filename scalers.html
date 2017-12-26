@@ -25,13 +25,13 @@
     <table style="display:inline-block; max-width:500px; vertical-align:top">
       <tr><td>EPICS variables</td></tr>
       <tr><td>Group:
-        <select ng-model="EPICSgroup" 
+        <select ng-model="EPICS.group" 
                 ng-change="EPICSgroupSelected()"
-                ng-options="x for x in EPICSgroups">
+                ng-options="x for x in EPICS.groups">
         </select>
       </td></tr>
-      <tr ng-show="EPICSgroup != nogroup"><td>Search:
-        <input type="text" ng-model="channelFilterRE" size="25" 
+      <tr ng-show="EPICS.group != EPICS.nogroup"><td>Search:
+        <input type="text" ng-model="EPICS.channelFilterRE" size="25" 
                placeholder="grep-style regular expression"
                ng-change="filterChannels()">
         </input>
@@ -43,14 +43,14 @@
         </button>
       </td></tr>
     </table>
-    <table style="display:inline-block; max-width:500px vertical-align:top" class="underline-headers" ng-show="EPICSgroup != nogroup">
+    <table style="display:inline-block; max-width:500px vertical-align:top" class="underline-headers" ng-show="EPICS.group != EPICS.nogroup">
       <tr>
         <th valign="bottom">variable name</th>
         <th valign="bottom" width="90">length</th>
         <th valign="bottom" width="70">x axis?</th>
         <th valign="bottom" width="70">y axis?</th>
       </tr>
-      <tr ng-repeat="evar in EPICSvars | filter:searchFilter | limitTo:channelPageSize:channelPageStart track by evar.name">
+      <tr ng-repeat="evar in EPICS.vars | filter:searchFilter | limitTo:channelPageSize:channelPageStart track by evar.name">
         <td><span ng-bind="evar.name"></span></td>
         <td align="right" style="padding-right: 30px"><span ng-bind="evar.size"></span></td>
         <td align="center"><input type="checkbox" ng-model="evar.add2x"/></td>
@@ -59,8 +59,8 @@
       <tr class="overline-row">
         <td><b>Select / unselect all</b></td>
         <td></td>
-        <td align="center"><input type="checkbox" ng-model="selectAllX" ng-change="channelSelectAllX()"/></td>
-        <td align="center"><input type="checkbox" ng-model="selectAllY" ng-change="channelSelectAllY()"/></td>
+        <td align="center"><input type="checkbox" ng-model="EPICS.selectAllX" ng-change="channelSelectAllX()"/></td>
+        <td align="center"><input type="checkbox" ng-model="EPICS.selectAllY" ng-change="channelSelectAllY()"/></td>
       </tr>
       <tr class="underline-row">
         <td><b>Totals</b></td>
@@ -86,13 +86,13 @@
     <tr><td>from</td><td align="right">
       <button ng-click="setStartRunStart()">start</button>
       <input type="number" min="1" max="999999999"
-             placeholder="run number" ng-model="runStart">
+             placeholder="run number" ng-model="timeSpan.runStart">
       </input>
       <button ng-click="setStartRunEnd()">end</button>
     </td></tr>
     <tr><td colspan="2">
       <input type="datetime-local" name="timeStart"
-              step="0.001" ng-model="timeStart"
+              step="0.001" ng-model="timeSpan.timeStart"
               ng-change="setTimeSpanTimes()">
       </input>
     </td></tr>
@@ -102,17 +102,36 @@
     <tr><td>until</td><td align="right">
       <button ng-click="setEndRunStart()">start</button>
       <input type="number" min="1" max="999999999"
-             placeholder="run number" ng-model="runEnd">
+             placeholder="run number" ng-model="timeSpan.runEnd">
       </input>
       <button ng-click="setEndRunEnd()">end</button>
     </td></tr>
     <tr><td colspan="2">
       <input type="datetime-local" name="timeEnd"
-             step="0.001" ng-model="timeEnd"
+             step="0.001" ng-model="timeSpan.timeEnd"
              ng-change="setTimeSpanTimes()">
     </input>
     </td></tr>
     </table>
+  </div>
+</div>
+<div class="w3-row">
+  <div class="w3-col l2 w3-container"><p></p></div>
+  <div class="w3-col l10 w3-container">
+  <p ng-if="timeSpan.timeStart && timeSpan.timeEnd && timeSpan.timeEnd > timeSpan.timeStart">
+  Time span is {{ (timeSpan.timeEnd.getTime() - timeSpan.timeStart.getTime()) / 1000 }}
+  seconds spanned by
+  <input type="number" min="1" max="999999" step="1"
+         ng-model="timeSpan.sampleCount" ng-change="setTimeSampleCount()"></input>
+  evenly spaced samples of
+  <input type="number" min="1" max="9999" step="1"
+         ng-model="timeSpan.sampleWidth" ng-change="setTimeSampleWidth()"></input>
+  seconds each, total coverage is
+  {{
+    (1e5 * timeSpan.sampleCount * timeSpan.sampleWidth / 
+    (timeSpan.timeEnd.getTime() - timeSpan.timeStart.getTime())).toPrecision(3)
+  }}%.
+  </p>
   </div>
 </div>
 
@@ -122,27 +141,27 @@ var app = angular.module('GlueXscalers', []);
 app.controller('scalersCtrl', function($scope, $http) {
     $http({ method : "GET", url : "?request=list_groups" }).then(
         function(response) {
-            $scope.EPICSgroups = {};
-            $scope.nogroup = "...choose one";
-            $scope.EPICSgroups[0] = $scope.nogroup;
+            $scope.EPICS.groups = {};
+            $scope.EPICS.nogroup = "...choose one";
+            $scope.EPICS.groups[0] = $scope.EPICS.nogroup;
             for (var name in response.data) {
                 index = response.data[name];
-                $scope.EPICSgroups[index] = name;
+                $scope.EPICS.groups[index] = name;
             }
-            $scope.EPICSgroup = $scope.nogroup;
+            $scope.EPICS.group = $scope.EPICS.nogroup;
         },
         function(response) {
-            $scope.EPICSgroups = {};
-            $scope.nogroup = "no groups found";
-            $scope.EPICSgroups[0] = $scope.nogroup;
-            $scope.EPICSgroup = $scope.nogroup;
+            $scope.EPICS.groups = {};
+            $scope.EPICS.nogroup = "no groups found";
+            $scope.EPICS.groups[0] = $scope.EPICS.nogroup;
+            $scope.EPICS.group = $scope.EPICS.nogroup;
         }
     );
 
     $scope.EPICSgroupSelected = function() {
         var gindex = 0;
-        for (var key in $scope.EPICSgroups) {
-          if ($scope.EPICSgroup == $scope.EPICSgroups[key]) {
+        for (var key in $scope.EPICS.groups) {
+          if ($scope.EPICS.group == $scope.EPICS.groups[key]) {
             gindex = key;
             break;
           }
@@ -150,108 +169,111 @@ app.controller('scalersCtrl', function($scope, $http) {
         var querystring = "?request=list_channels&group=" + gindex.toString();
         $http({ method : "GET", url : querystring }).then(
             function(response) {
-                $scope.EPICSvars = response.data;
+                $scope.EPICS.vars = response.data;
                 $scope.filterChannels();
             },
             function(response) {
-                $scope.EPICSvars = [];
+                $scope.EPICS.vars = [];
             }
         );
     };
 
     $scope.filterChannels = function() {
         var visible = 0;
-        if ($scope.channelFilterRE && $scope.channelFilterRE.length > 0) {
-            var re = RegExp($scope.channelFilterRE);
-            for (var i in $scope.EPICSvars) {
-                if (re.exec($scope.EPICSvars[i].name)) {
-                    $scope.EPICSvars[i].hide = false;
+        if ($scope.EPICS.channelFilterRE && $scope.EPICS.channelFilterRE.length > 0) {
+            var re = RegExp($scope.EPICS.channelFilterRE);
+            for (var i in $scope.EPICS.vars) {
+                if (re.exec($scope.EPICS.vars[i].name)) {
+                    $scope.EPICS.vars[i].hide = false;
                     ++visible;
                 }
                 else  {
-                    $scope.EPICSvars[i].hide = true;
+                    $scope.EPICS.vars[i].hide = true;
                 }
             }
         }
         else {
-           visible = $scope.EPICSvars.length;
+           visible = $scope.EPICS.vars.length;
         }
-        $scope.channelPageStart = 0;
-        $scope.channelPageSize = 15;
-        var pages = visible / $scope.channelPageSize;
-        if (pages / 10 > $scope.channelPageSize) 
-            $scope.channelPageSize = Math.ceil(Math.sqrt(visible / 20));
-        pages = Math.ceil(visible / $scope.channelPageSize);
-        $scope.channelPages = [];
+        $scope.EPICS.channelPageStart = 0;
+        $scope.EPICS.channelPageSize = 15;
+        var pages = visible / $scope.EPICS.channelPageSize;
+        if (pages / 10 > $scope.EPICS.channelPageSize) 
+            $scope.EPICS.channelPageSize = Math.ceil(Math.sqrt(visible / 20));
+        pages = Math.ceil(visible / $scope.EPICS.channelPageSize);
+        $scope.EPICS.channelPages = [];
         for (var page = 0; page < pages; ++page)
-            $scope.channelPages.push(page);
-        $scope.channelPageSelected = 0;
-        $scope.channelsSelectedX = 0;
-        $scope.channelsSelectedY = 0;
-        $scope.channelTotal = 0;
-        $scope.selectAllX = false;
-        $scope.selectAllY = false;
+            $scope.EPICS.channelPages.push(page);
+        $scope.EPICS.channelPageSelected = 0;
+        $scope.EPICS.channelsSelectedX = 0;
+        $scope.EPICS.channelsSelectedY = 0;
+        $scope.EPICS.channelTotal = 0;
+        $scope.EPICS.selectAllX = false;
+        $scope.EPICS.selectAllY = false;
     };
 
     $scope.searchFilter = function(evar) {
-        if ($scope.channelFilterRE && $scope.channelFilterRE.length > 0) {
-            var re = RegExp($scope.channelFilterRE);
+        if ($scope.EPICS.channelFilterRE && $scope.EPICS.channelFilterRE.length > 0) {
+            var re = RegExp($scope.EPICS.channelFilterRE);
             return re.test(evar.name);
         }
         return true;
     };
 
     $scope.channelPageSet = function(index) {
-        $scope.channelPageStart = index * $scope.channelPageSize;
-        $scope.channelPageSelected = index;
+        $scope.EPICS.channelPageStart = index * $scope.EPICS.channelPageSize;
+        $scope.EPICS.channelPageSelected = index;
     };
 
     $scope.channelCount = function() {
         var re;
-        if ($scope.channelFilterRE && $scope.channelFilterRE.length > 0)
-            re = RegExp($scope.channelFilterRE);
-        $scope.totalSize = 0;
-        $scope.channelsSelectedX = 0;
-        $scope.channelsSelectedY = 0;
-        for (var i in $scope.EPICSvars) {
-            if (!re || re.exec($scope.EPICSvars[i].name)) {
-                $scope.totalSize += $scope.EPICSvars[i].size;
-                if ($scope.EPICSvars[i].add2x)
-                    ++$scope.channelsSelectedX;
-                if ($scope.EPICSvars[i].add2y)
-                    ++$scope.channelsSelectedY;
+        if ($scope.EPICS.channelFilterRE && $scope.EPICS.channelFilterRE.length > 0)
+            re = RegExp($scope.EPICS.channelFilterRE);
+        $scope.EPICS.totalSize = 0;
+        $scope.EPICS.channelsSelectedX = 0;
+        $scope.EPICS.channelsSelectedY = 0;
+        for (var i in $scope.EPICS.vars) {
+            if (!re || re.exec($scope.EPICS.vars[i].name)) {
+                $scope.EPICS.totalSize += $scope.EPICS.vars[i].size;
+                if ($scope.EPICS.vars[i].add2x)
+                    ++$scope.EPICS.channelsSelectedX;
+                if ($scope.EPICS.vars[i].add2y)
+                    ++$scope.EPICS.channelsSelectedY;
             }
         }
-        return $scope.totalSize;
+        return $scope.EPICS.totalSize;
     };
 
     $scope.channelSelectAllX = function() {
         var re;
-        if ($scope.channelFilterRE && $scope.channelFilterRE.length > 0)
-            re = RegExp($scope.channelFilterRE);
-        for (var i in $scope.EPICSvars)
-            if (!re || re.exec($scope.EPICSvars[i].name))
-                $scope.EPICSvars[i].add2x = $scope.selectAllX;
+        if ($scope.EPICS.channelFilterRE && $scope.EPICS.channelFilterRE.length > 0)
+            re = RegExp($scope.EPICS.channelFilterRE);
+        for (var i in $scope.EPICS.vars)
+            if (!re || re.exec($scope.EPICS.vars[i].name))
+                $scope.EPICS.vars[i].add2x = $scope.EPICS.selectAllX;
     };
 
     $scope.channelSelectAllY = function() {
         var re;
-        if ($scope.channelFilterRE && $scope.channelFilterRE.length > 0)
-            re = RegExp($scope.channelFilterRE);
-        for (var i in $scope.EPICSvars)
-            if (!re || re.exec($scope.EPICSvars[i].name))
-                $scope.EPICSvars[i].add2y = $scope.selectAllY;
+        if ($scope.EPICS.channelFilterRE && $scope.EPICS.channelFilterRE.length > 0)
+            re = RegExp($scope.EPICS.channelFilterRE);
+        for (var i in $scope.EPICS.vars)
+            if (!re || re.exec($scope.EPICS.vars[i].name))
+                $scope.EPICS.vars[i].add2y = $scope.EPICS.selectAllY;
     };
 
     $scope.setStartRunStart = function() {
-        if ($scope.runStart) {
-            $scope.getRunTimes($scope.runStart).then(function(response) {
+        if ($scope.timeSpan.runStart) {
+            $scope.getRunTimes($scope.timeSpan.runStart).then(function(response) {
                 if (response.data.starttime) {
                     var t = response.data.starttime;
-                    $scope.timeStart = new Date(t * 1000);
-                    $scope.runStart = response.data.run;
-                    if (!$scope.runEnd || $scope.runEnd < $scope.runStart) {
-                        $scope.runEnd = $scope.runStart;
+                    $scope.timeSpan.timeStart = new Date(t * 1000);
+                    $scope.setTimeSpanTimes();
+                    $scope.timeSpan.runStart = response.data.run;
+                    if (!$scope.timeSpan.runEnd || 
+                        $scope.timeSpan.runEnd < $scope.timeSpan.runStart)
+                    {
+                        $scope.timeSpan.runEnd = $scope.timeSpan.runStart;
                     }
                 }
             });
@@ -259,14 +281,17 @@ app.controller('scalersCtrl', function($scope, $http) {
     };
 
     $scope.setStartRunEnd = function() {
-        if ($scope.runStart) {
-            $scope.getRunTimes($scope.runStart).then(function(response) {
+        if ($scope.timeSpan.runStart) {
+            $scope.getRunTimes($scope.timeSpan.runStart).then(function(response) {
                 if (response.data.endtime) {
                     var t = response.data.endtime;
-                    $scope.timeStart = new Date(t * 1000);
-                    $scope.runStart = response.data.run;
-                    if (!$scope.runEnd || $scope.runEnd < $scope.runStart) {
-                        $scope.runEnd = $scope.runStart + 1;
+                    $scope.timeSpan.timeStart = new Date(t * 1000);
+                    $scope.setTimeSpanTimes();
+                    $scope.timeSpan.runStart = response.data.run;
+                    if (!$scope.timeSpan.runEnd || 
+                        $scope.timeSpan.runEnd < $scope.timeSpan.runStart)
+                    {
+                        $scope.timeSpan.runEnd = $scope.timeSpan.runStart + 1;
                     }
                 }
             });
@@ -274,14 +299,17 @@ app.controller('scalersCtrl', function($scope, $http) {
     };
 
     $scope.setEndRunStart = function() {
-        if ($scope.runEnd) {
-            $scope.getRunTimes($scope.runEnd).then(function(response) {
+        if ($scope.timeSpan.runEnd) {
+            $scope.getRunTimes($scope.timeSpan.runEnd).then(function(response) {
                 if (response.data.starttime) {
                     var t = response.data.starttime;
-                    $scope.timeEnd = new Date(t * 1000);
-                    $scope.runEnd = response.data.run;
-                    if (!$scope.runStart || $scope.runStart > $scope.runEnd) {
-                        $scope.runStart = $scope.runEnd - 1;
+                    $scope.timeSpan.timeEnd = new Date(t * 1000);
+                    $scope.setTimeSpanTimes();
+                    $scope.timeSpan.runEnd = response.data.run;
+                    if (!$scope.timeSpan.runStart ||
+                        $scope.timeSpan.runStart > $scope.timeSpan.runEnd)
+                    {
+                        $scope.timeSpan.runStart = $scope.timeSpan.runEnd - 1;
                     }
                 }
             });
@@ -289,22 +317,54 @@ app.controller('scalersCtrl', function($scope, $http) {
     };
 
     $scope.setEndRunEnd = function() {
-        if ($scope.runEnd) {
-            $scope.getRunTimes($scope.runEnd).then(function(response) {
+        if ($scope.timeSpan.runEnd) {
+            $scope.getRunTimes($scope.timeSpan.runEnd).then(function(response) {
                 if (response.data.endtime) {
                     var t = response.data.endtime;
-                    $scope.timeEnd = new Date(t * 1000);
-                    $scope.runEnd = response.data.run;
-                    if (!$scope.runStart || $scope.runStart > $scope.runEnd) {
-                        $scope.runStart = $scope.runEnd;
+                    $scope.timeSpan.timeEnd = new Date(t * 1000);
+                    $scope.setTimeSpanTimes();
+                    $scope.timeSpan.runEnd = response.data.run;
+                    if (!$scope.timeSpan.runStart ||
+                        $scope.timeSpan.runStart > $scope.timeSpan.runEnd)
+                    {
+                        $scope.timeSpan.runStart = $scope.timeSpan.runEnd;
                     }
                 }
             });
         }
     };
 
+    $scope.setTimeSampleCount = function() {
+        var duration = ($scope.timeSpan.timeEnd.getTime() - 
+                        $scope.timeSpan.timeStart.getTime()) / 1000;
+        if (duration > 0) {
+            var count = $scope.timeSpan.sampleCount;
+            count = (count > 0)? count : 1;
+            count = (count < duration)? count : Math.floor(duration);
+            var delta = Math.floor(duration / count);
+            delta = (delta > 0)? delta : 1;
+            $scope.timeSpan.sampleCount = count;
+            $scope.timeSpan.sampleStep = delta;
+            if ($scope.timeSpan.sampleWidth > delta) {
+                $scope.timeSpan.sampleWidth = delta;
+            }
+        }
+    };
+
+    $scope.setTimeSampleWidth = function() {
+        if ($scope.timeSpan.sampleWidth > $scope.timeSpan.sampleStep)
+            $scope.timeSpan.sampleWidth = $scope.timeSpan.sampleStep;
+        else if ($scope.timeSpan.sampleWidth < 1)
+            $scope.timeSpan.sampleWidth = 1;
+    };
+
     $scope.setTimeSpanTimes = function() {
-        console.log("set time span");
+        var duration = ($scope.timeSpan.timeEnd.getTime() -
+                        $scope.timeSpan.timeStart.getTime()) / 1000;
+        if (duration > 0) {
+            var delta = $scope.timeSpan.sampleStep;
+            $scope.timeSpan.sampleCount = Math.ceil((duration + 0.5) / delta);
+        }
     };
 
     $scope.getRunTimes = function(run) {
@@ -315,14 +375,19 @@ app.controller('scalersCtrl', function($scope, $http) {
         });
     };
 
-    $scope.channelPages = 0;
-    $scope.channelPageSize = 15;
-    $scope.channelPageCount = 0;
-    $scope.channelPageStart = 0;
-    $scope.channelPageSelected = 0;
-    $scope.timeStart = new Date();
-    $scope.timeEnd = new Date();
-    $scope.timeStart = new Date($scope.timeStart.getTime() - 3600000);
+    $scope.EPICS = {};
+    $scope.EPICS.channelPages = 0;
+    $scope.EPICS.channelPageSize = 15;
+    $scope.EPICS.channelPageCount = 0;
+    $scope.EPICS.channelPageStart = 0;
+    $scope.EPICS.channelPageSelected = 0;
+
+    $scope.timeSpan = {};
+    $scope.timeSpan.timeEnd = new Date();
+    $scope.timeSpan.timeStart = new Date($scope.timeSpan.timeEnd.getTime() - 3600000);
+    $scope.timeSpan.sampleCount = 100;
+    $scope.timeSpan.sampleWidth = 1;
+    $scope.setTimeSampleCount();
 });
 
 </script>
