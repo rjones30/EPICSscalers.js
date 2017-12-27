@@ -1,0 +1,15 @@
+table.underline-headers {
+	border-collapse: collapse;
+}
+
+table.underline-headers th {
+	border-bottom: 1px solid black;
+}
+
+tr.overline-row td {
+	border-top: 1px solid black;
+}
+
+tr.underline-row td {
+	border-bottom: 1px solid black;
+}
