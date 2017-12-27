@@ -57,7 +57,7 @@
       </tr>
       <tr ng-repeat="evar in EPICS.vars | filter:searchFilter | 
                      limitTo:EPICS.channelPageSize:EPICS.channelPageStart
-                     track by evar.name">
+                     track by $index">
         <td><span ng-bind="evar.name"></span></td>
         <td align="right" style="padding-right: 30px">
           <span ng-bind="evar.size"></span>
@@ -173,8 +173,9 @@
       </input>
       <div ng-show="Xaxis.vars.length">
       <table style="padding-left: 20px">
-        <tr class="underline-row" height="10px"><td colspan="2"></td></tr>
-        <tr ng-repeat="evar in Xaxis.vars track by evar.name">
+        <tr class="underline-row" height="10px">
+        <td colspan="2" width="300px"></td></tr>
+        <tr ng-repeat="evar in Xaxis.vars track by $index">
           <td>
           {{
               evar.name + ((evar.size > 1)?
@@ -185,24 +186,41 @@
           }}
           </td>
           <td align="right" width="90px">
-            <button type="button" class="btn btn-link"
-                    style="padding:0; border:none; background:none"
-                    ng-show="evar.size > 1">
-              <span class="glyphicon glyphicon-pencil"></span>
-            </button>
-            <button type="button" class="btn btn-link"
-                    style="padding:0; border:none; background:none"
+            <div class="modal-container" 
+                 ng-show="evar.size > 1">
+              <div class="modal-window-axis-var" ng-show="evar.edit">
+                {{ evar.name }}<br/> index from 
+                <input type="number" min="0" step="1"
+                       max="{{evar.max_index}}" ng-model="evar.min_index">
+                </input> to
+                <input type="number" step="1"
+                       min="{{evar.min_index}}" max="{{evar.size - 1}}"
+                       ng-model="evar.max_index"></input>
+                <button type="button" class="btn btn-link modal-window-close"
+                        ng-click="editXselection($index, 0)">
+                  <span class="glyphicon glyphicon-remove-sign"></span>
+                </button>
+              </div>
+              <button type="button" class="btn btn-link btn-glyph"
+                      ng-click="editXselection($index, 1)">
+                <span class="glyphicon glyphicon-pencil"></span>
+              </button>
+            </div>
+            <button type="button" class="btn btn-link btn-glyph"
                     ng-click="deleteXselection($index)">
               <span class="glyphicon glyphicon-trash"></span>
             </button>
           </td>
         </tr>
-        <tr ng-if="Xaxis.importTruncated"><td colspan="2" style="color: red">
-        <i>Import operation was truncated because you attempted to add more than
-        {{ Xaxis.importTruncated }} entries to the list. Are you sure this is what
-        you want to do? If you are really going to look at all of these variables,
-        go ahead and hit the import checkbox as many times as you wish until all
-        of the variables of interest have been imported.  And be prepared to wait.</i>
+        <tr ng-if="Xaxis.importTruncated">
+         <td colspan="2" width="300px" style="color: red">
+          <i>Import operation was truncated because you attempted to add 
+          more than {{ Xaxis.importTruncated }} entries to the list. 
+          Are you sure this is what you want to do? If you are really
+          going to look at all of these variables, go ahead and hit
+          the import checkbox as many times as you wish until all
+          of the variables of interest have been imported.
+          And be prepared to wait.</i>
         </td></tr>
         <tr class="overline-row" height="10px"><td colspan="2"></td></tr>
       </table>
@@ -233,7 +251,7 @@
         <div ng-show="Yaxis.vars.length">
         <table style="padding-left:20px">
         <tr class="underline-row" height="10px"><td colspan="2"></td</tr>
-        <tr ng-repeat="evar in Yaxis.vars track by evar.name">
+        <tr ng-repeat="evar in Yaxis.vars track by $index">
           <td>
           {{
               evar.name + ((evar.size > 1)?
@@ -244,25 +262,43 @@
           }}
           </td>
           <td align="right" width="90px">
-            <button type="button" class="btn btn-link"
-                    style="padding:0; border:none; background:none"
-                    ng-show="evar.size > 1">
-              <span class="glyphicon glyphicon-pencil"></span>
-            </button>
-            <button type="button" class="btn btn-link"
-                    style="padding:0; border:none; background:none"
+            <div class="modal-container" 
+                 ng-show="evar.size > 1">
+              <div class="modal-window-axis-var" ng-show="evar.edit">
+                {{ evar.name }}<br/> index from 
+                <input type="number" min="0" step="1"
+                       max="{{evar.max_index}}" ng-model="evar.min_index">
+                </input> to
+                <input type="number" step="1"
+                       min="{{evar.min_index}}" max="{{evar.size - 1}}"
+                       ng-model="evar.max_index"></input>
+                <button type="button" class="btn btn-link modal-window-close"
+                        ng-click="editXselection($index, 0)">
+                  <span class="glyphicon glyphicon-remove-sign"></span>
+                </button>
+              </div>
+              <button type="button" class="btn btn-link btn-glyph"
+                      ng-click="editYselection($index, 1)">
+                <span class="glyphicon glyphicon-pencil"></span>
+              </button>
+            </div>
+            <button type="button" class="btn btn-link btn-glyph"
                     ng-click="deleteYselection($index)">
               <span class="glyphicon glyphicon-trash"></span>
             </button>
           </td>
         </tr>
-        <tr ng-if="Yaxis.importTruncated"><td colspan="2" style="color: red">
-        <i>Import operation was truncated because you attempted to add more than
-        {{ Yaxis.importTruncated }} entries to the list. Are you sure this is what
-        you want to do? If you are really going to look at all of these variables,
-        go ahead and hit the import checkbox as many times as you wish until all
-        of the variables of interest have been imported.  And be prepared to wait.</i>
-        </td></tr>
+        <tr ng-if="Yaxis.importTruncated">
+          <td colspan="2" width="300px" style="color: red">
+          <i>Import operation was truncated because you attempted to add 
+          more than {{ Xaxis.importTruncated }} entries to the list. 
+          Are you sure this is what you want to do? If you are really
+          going to look at all of these variables, go ahead and hit
+          the import checkbox as many times as you wish until all
+          of the variables of interest have been imported.
+          And be prepared to wait.</i>
+          </td>
+        </tr>
         <tr class="overline-row" height="10px"><td colspan="2"></td></tr>
         </table>
         <input type="checkbox" ng-model="Yaxis.clearSelection"
@@ -544,11 +580,14 @@ app.controller('scalersCtrl', function($scope, $http) {
 
     $scope.importXselection = function() {
         $scope.Xaxis.importTruncated = 0;
+        var dupslist = [];
         var addcount = 0;
         for (var i in $scope.EPICS.vars) {
             if ($scope.EPICS.vars[i].add2x) {
                 var evar = $scope.EPICS.vars[i];
-                if (!$scope.Xaxis.names[evar.name]) {
+                if (!$scope.Xaxis.names[evar.name] &&
+                    !$scope.Yaxis.names[evar.name])
+                {
                     evar.min_index = 0;
                     evar.max_index = evar.size - 1;
                     $scope.Xaxis.vars.push(evar);
@@ -559,18 +598,33 @@ app.controller('scalersCtrl', function($scope, $http) {
                         return;
                     }
                 }
+                else if (addcount == 0) {
+                    dupslist.push(evar);
+                }
             }
+        }
+        // ignore multiple imports of the same variable
+        // unless it is being added one click at a time.
+        if (addcount == 0 && dupslist.length == 1) {
+            var evar = JSON.parse(JSON.stringify(dupslist[0]));
+            evar.min_index = 0;
+            evar.max_index = evar.size - 1;
+            $scope.Xaxis.vars.push(evar);
+            $scope.Xaxis.names[evar.name] = evar.chan;
         }
         $scope.Xaxis.importSelection = false;
     };
 
     $scope.importYselection = function() {
         $scope.Yaxis.importTruncated = 0;
+        var dupslist = [];
         var addcount = 0;
         for (var i in $scope.EPICS.vars) {
             if ($scope.EPICS.vars[i].add2y) {
                 var evar = $scope.EPICS.vars[i];
-                if (!$scope.Yaxis.names[evar.name]) {
+                if (!$scope.Yaxis.names[evar.name] &&
+                    !$scope.Xaxis.names[evar.name])
+                {
                     evar.min_index = 0;
                     evar.max_index = evar.size - 1;
                     $scope.Yaxis.vars.push(evar);
@@ -581,7 +635,19 @@ app.controller('scalersCtrl', function($scope, $http) {
                         return;
                     }
                 }
+                else if (addcount == 0) {
+                    dupslist.push(evar);
+                }
             }
+        }
+        // ignore multiple imports of the same variable
+        // unless it is being added one click at a time.
+        if (addcount == 0 && dupslist.length == 1) {
+            var evar = JSON.parse(JSON.stringify(dupslist[0]));
+            evar.min_index = 0;
+            evar.max_index = evar.size - 1;
+            $scope.Yaxis.vars.push(evar);
+            $scope.Yaxis.names[evar.name] = evar.chan;
         }
         $scope.Yaxis.importSelection = false;
     };
@@ -596,6 +662,14 @@ app.controller('scalersCtrl', function($scope, $http) {
         $scope.Yaxis.vars = [];
         $scope.Yaxis.names = {};
         $scope.Yaxis.clearSelection = false;
+    };
+
+    $scope.editXselection = function(index, flag) {
+        $scope.Xaxis.vars[index].edit = flag
+    };
+
+    $scope.editYselection = function(index, flag) {
+        $scope.Yaxis.vars[index].edit = flag
     };
 
     $scope.deleteXselection = function(index) {
