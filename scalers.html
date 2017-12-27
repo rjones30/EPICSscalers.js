@@ -4,15 +4,14 @@
 <title>GlueX Scalers Display and Animation</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
-<script
-  src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js">
-</script>
-<style type='text/css'>
-    table.underline-headers { border-collapse: collapse; }
-    table.underline-headers th { border-bottom: 1px solid black; }
-    tr.overline-row td { border-top: 1px solid black; }
-    tr.underline-row td { border-bottom: 1px solid black; }
-</style>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<!-- Additional packages for reference, do not include unless needed ==>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<!== End of Additional packages for reference, do not include unless needed -->
+<link rel="stylesheet" type="text/css" href="scalers.css">
 </head>
 
 <body ng-app="GlueXscalers" ng-controller="scalersCtrl">
@@ -38,10 +37,10 @@
                ng-change="filterChannels()">
         </input>
       </td></tr>
-      <tr><td ng-if="channelPages.length > 1">
-        <button ng-repeat="$index in channelPages" 
+      <tr><td ng-if="EPICS.channelPages.length > 1">
+        <button ng-repeat="$index in EPICS.channelPages" 
                 ng-click="channelPageSet($index)"
-                ng-style="($index == channelPageSelected) && 
+                ng-style="($index == EPICS.channelPageSelected) && 
                           {'background-color':'yellow'} || 
                           {'padding':'1px 6px'}">
           {{$index + 1}}
@@ -57,7 +56,7 @@
         <th valign="bottom" width="70">y axis?</th>
       </tr>
       <tr ng-repeat="evar in EPICS.vars | filter:searchFilter | 
-                     limitTo:channelPageSize:channelPageStart
+                     limitTo:EPICS.channelPageSize:EPICS.channelPageStart
                      track by evar.name">
         <td><span ng-bind="evar.name"></span></td>
         <td align="right" style="padding-right: 30px">
@@ -81,8 +80,8 @@
       <tr class="underline-row">
         <td><b>Totals</b></td>
         <td align="right" style="padding-right: 30px">{{ channelCount() }}</td>
-        <td align="center">{{ channelsSelectedX }}</td>
-        <td align="center">{{ channelsSelectedY }}</td>
+        <td align="center">{{ EPICS.channelsSelectedX }}</td>
+        <td align="center">{{ EPICS.channelsSelectedY }}</td>
       </tr>
     </table>
   </div>
@@ -159,19 +158,131 @@
 
 <div class="w3-row">
   <div class="w3-col l2 w3-container"><p></p></div>
+
+  <!-- x axis -->
+
   <div class="w3-col l4 w3-container">
-  <h4 align="center">X axis specification</h4>
-  <input type="checkbox" ng-model="Xaxis.isTime">
+    <h4 style="padding-left: 50px">X axis specification</h4>
+    <input type="checkbox" ng-model="Xaxis.isTime">
+    Select time (seconds) as the x coordinate for plotting.
+    </input><br/>
+    <div ng-show="!Xaxis.isTime"</div>
+      <input type="checkbox" ng-model="Xaxis.importSelection"
+                             ng-change="importXselection()">
+      Import selected EPICS variables from above listing.
+      </input>
+      <div ng-show="Xaxis.vars.length">
+      <table style="padding-left: 20px">
+        <tr class="underline-row" height="10px"><td colspan="2"></td></tr>
+        <tr ng-repeat="evar in Xaxis.vars track by evar.name">
+          <td>
+          {{
+              evar.name + ((evar.size > 1)?
+                           '[' + evar.min_index.toString() +
+                           ((evar.max_index > evar.min_index)?
+                            ':' + evar.max_index.toString() : '')
+                           + ']' : '')
+          }}
+          </td>
+          <td align="right" width="90px">
+            <button type="button" class="btn btn-link"
+                    style="padding:0; border:none; background:none"
+                    ng-show="evar.size > 1">
+              <span class="glyphicon glyphicon-pencil"></span>
+            </button>
+            <button type="button" class="btn btn-link"
+                    style="padding:0; border:none; background:none"
+                    ng-click="deleteXselection($index)">
+              <span class="glyphicon glyphicon-trash"></span>
+            </button>
+          </td>
+        </tr>
+        <tr ng-if="Xaxis.importTruncated"><td colspan="2" style="color: red">
+        <i>Import operation was truncated because you attempted to add more than
+        {{ Xaxis.importTruncated }} entries to the list. Are you sure this is what
+        you want to do? If you are really going to look at all of these variables,
+        go ahead and hit the import checkbox as many times as you wish until all
+        of the variables of interest have been imported.  And be prepared to wait.</i>
+        </td></tr>
+        <tr class="overline-row" height="10px"><td colspan="2"></td></tr>
+      </table>
+      <input type="checkbox" ng-model="Xaxis.clearSelection"
+                             ng-change="clearXselection()">
+        Clear this list.
+      </input>
+      </div>
+    </div>
   </div>
+
+  <!-- y axis -->
+
   <div class="w3-col l4 w3-container">
-  <h4 align="center">Y axis specification</h4>
+    <h4 style="padding-left: 50px">Y axis specification</h4>
+    <input type="checkbox" ng-model="Yaxis.isRate">
+    Select rate (Hz) as the y coordinate for plotting.
+    </input><br/>
+    <div ng-show="!Yaxis.isRate"</div>
+      <input type="checkbox" ng-model="Yaxis.isFreq">
+      Select frequency (samples) as the y coordinate for plotting.
+      </input><br/>
+      <div ng-show="!Yaxis.isFreq"</div>
+        <input type="checkbox" ng-model="Yaxis.importSelection"
+                               ng-change="importYselection()">
+        Import selected EPICS variables from above listing.
+        </input>
+        <div ng-show="Yaxis.vars.length">
+        <table style="padding-left:20px">
+        <tr class="underline-row" height="10px"><td colspan="2"></td</tr>
+        <tr ng-repeat="evar in Yaxis.vars track by evar.name">
+          <td>
+          {{
+              evar.name + ((evar.size > 1)?
+                           '[' + evar.min_index.toString() +
+                           ((evar.max_index > evar.min_index)?
+                            ':' + evar.max_index.toString() : '')
+                           + ']' : '')
+          }}
+          </td>
+          <td align="right" width="90px">
+            <button type="button" class="btn btn-link"
+                    style="padding:0; border:none; background:none"
+                    ng-show="evar.size > 1">
+              <span class="glyphicon glyphicon-pencil"></span>
+            </button>
+            <button type="button" class="btn btn-link"
+                    style="padding:0; border:none; background:none"
+                    ng-click="deleteYselection($index)">
+              <span class="glyphicon glyphicon-trash"></span>
+            </button>
+          </td>
+        </tr>
+        <tr ng-if="Yaxis.importTruncated"><td colspan="2" style="color: red">
+        <i>Import operation was truncated because you attempted to add more than
+        {{ Yaxis.importTruncated }} entries to the list. Are you sure this is what
+        you want to do? If you are really going to look at all of these variables,
+        go ahead and hit the import checkbox as many times as you wish until all
+        of the variables of interest have been imported.  And be prepared to wait.</i>
+        </td></tr>
+        <tr class="overline-row" height="10px"><td colspan="2"></td></tr>
+        </table>
+        <input type="checkbox" ng-model="Yaxis.clearSelection"
+                               ng-change="clearYselection()">
+          Clear this list.
+        </input>
+        </div>
+      </div>
+    </div>
   </div>
+
   <div class="w3-col l2 w3-container"><p></p></div>
+</div>
+
 </form>
 
 
 
 <!-- Angular.js application code begins here -->
+
 
 <script>
 var app = angular.module('GlueXscalers', []);
@@ -431,6 +542,72 @@ app.controller('scalersCtrl', function($scope, $http) {
         });
     };
 
+    $scope.importXselection = function() {
+        $scope.Xaxis.importTruncated = 0;
+        var addcount = 0;
+        for (var i in $scope.EPICS.vars) {
+            if ($scope.EPICS.vars[i].add2x) {
+                var evar = $scope.EPICS.vars[i];
+                if (!$scope.Xaxis.names[evar.name]) {
+                    evar.min_index = 0;
+                    evar.max_index = evar.size - 1;
+                    $scope.Xaxis.vars.push(evar);
+                    $scope.Xaxis.names[evar.name] = evar.chan;
+                    if (++addcount == 100) {
+                        $scope.Xaxis.importTruncated = addcount;
+                        $scope.Xaxis.importSelection = true;
+                        return;
+                    }
+                }
+            }
+        }
+        $scope.Xaxis.importSelection = false;
+    };
+
+    $scope.importYselection = function() {
+        $scope.Yaxis.importTruncated = 0;
+        var addcount = 0;
+        for (var i in $scope.EPICS.vars) {
+            if ($scope.EPICS.vars[i].add2y) {
+                var evar = $scope.EPICS.vars[i];
+                if (!$scope.Yaxis.names[evar.name]) {
+                    evar.min_index = 0;
+                    evar.max_index = evar.size - 1;
+                    $scope.Yaxis.vars.push(evar);
+                    $scope.Yaxis.names[evar.name] = evar.chan;
+                    if (++addcount == 100) {
+                        $scope.Yaxis.importTruncated = addcount;
+                        $scope.Yaxis.importSelection = true;
+                        return;
+                    }
+                }
+            }
+        }
+        $scope.Yaxis.importSelection = false;
+    };
+
+    $scope.clearXselection = function() {
+        $scope.Xaxis.vars = [];
+        $scope.Xaxis.names = {};
+        $scope.Xaxis.clearSelection = false;
+    };
+
+    $scope.clearYselection = function() {
+        $scope.Yaxis.vars = [];
+        $scope.Yaxis.names = {};
+        $scope.Yaxis.clearSelection = false;
+    };
+
+    $scope.deleteXselection = function(index) {
+        var evar = $scope.Xaxis.vars.splice(index, 1);
+        delete $scope.Xaxis.names[evar.name];
+    };
+
+    $scope.deleteYselection = function(index) {
+        var evar = $scope.Yaxis.vars.splice(index, 1);
+        delete $scope.Yaxis.names[evar.name];
+    };
+
     $scope.EPICS = {};
     $scope.EPICS.channelPages = 0;
     $scope.EPICS.channelPageSize = 15;
@@ -445,6 +622,13 @@ app.controller('scalersCtrl', function($scope, $http) {
     $scope.timeSpan.sampleCount = 100;
     $scope.timeSpan.sampleWidth = 1;
     $scope.setTimeSampleCount();
+
+    $scope.Xaxis = {};
+    $scope.Xaxis.vars = [];
+    $scope.Xaxis.names = {};
+    $scope.Yaxis = {};
+    $scope.Yaxis.vars = [];
+    $scope.Yaxis.names = {};
 });
 
 </script>

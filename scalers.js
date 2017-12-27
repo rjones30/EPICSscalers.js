@@ -9,6 +9,30 @@ function do_display_webform(callback) {
   });
 };
 
+function do_return_file(pathname, callback) {
+  var js = pathname.match(/^\/(.*\.js)$/);
+  var css = pathname.match(/^\/(.*\.css)$/);
+  var ico = pathname.match(/^\/(.*\.ico)$/);
+  if (js) {
+    fs.readFile(js[1], 'utf8', function(err, contents) {
+      callback(200, contents, 'javascript');
+    });
+  }
+  else if (css) {
+    fs.readFile(css[1], 'utf8', function(err, contents) {
+      callback(200, contents, 'css');
+    });
+  }
+  else if (ico) {
+    fs.readFile(ico[1], 'utf8', function(err, contents) {
+      callback(200, contents, 'ico');
+    });
+  }
+  else {
+    console.log("unexpected request received for file " + pathname);
+  }
+};
+
 function do_list_groups(callback) {
   var con = mysql.createConnection({
     host: "gluey.phys.uconn.edu",
@@ -105,16 +129,21 @@ http.createServer(function (req, res) {
     res.end(message);
     console.log("sent message in format " + type + " length " + message.length.toString())
   };
-  var queryData = url.parse(req.url, true).query;
-  if (queryData.request) {
-    if (queryData.request == "list_groups")
+  var response = url.parse(req.url, true);
+  var pathname = response.pathname;
+  var query = response.query;
+  if (query.request) {
+    if (query.request == "list_groups")
       do_list_groups(return_result);
-    else if (queryData.request == "list_channels")
-      do_list_channels(queryData.group, return_result);
-    else if (queryData.request == "run_times")
-      do_run_times(queryData.run, return_result);
+    else if (query.request == "list_channels")
+      do_list_channels(query.group, return_result);
+    else if (query.request == "run_times")
+      do_run_times(query.run, return_result);
     else
       return_result(400, "400 Bad Request", "plain");
+  }
+  else if (pathname.length > 1) {
+    do_return_file(pathname, return_result);
   }
   else
     do_display_webform(return_result);
