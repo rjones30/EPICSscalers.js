@@ -153,15 +153,14 @@
 
   <div class="w3-col l4 w3-container">
     <h4 style="padding-left:50px; margin-top:20px">X axis specification</h4>
-    <table><tr><td valign="top">
+    <table><tr class="option-table-row"><td>
       <input type="checkbox" ng-model="Xaxis.isTime">
     </td><td>
       Select time (seconds) as the x coordinate for plotting.
     </td></tr>
 
-    <tr class="option-table-row-spacer"><td></td></tr>
-
-    <tr ng-show="!Xaxis.isTime"><td valign="top">
+    <tr ng-show="!Xaxis.isTime" class="option-table-row">
+    <td>
       <input type="checkbox" ng-model="Xaxis.importSelection"
                              ng-change="importXselection()">
     </td><td>
@@ -221,49 +220,52 @@
         <tr class="overline-row" height="10"><td colspan="2"></td></tr>
       </table>
     </td></tr>
-    <tr ng-show="Xaxis.vars.length"><td valign="top">
+    <tr ng-show="Xaxis.vars.length" class="option-table-row"><td>
       <input type="checkbox" ng-model="Xaxis.clearSelection"
                              ng-change="clearXselection()">
     </td><td>
       Clear this list.
     </td></tr>
 
-    <tr class="option-table-row-spacer"><td></td></tr>
-
-    <tr ng-show="!Xaxis.isTime && Xaxis.vars.length == 0"><td valign="top">
-      <input type="checkbox" ng-model="Xaxis.isNameString">
+    <tr ng-show="!Xaxis.isTime && Xaxis.vars.length == 0"
+        class="option-table-row">
+    <td>
+      <input type="checkbox" ng-model="Xaxis.isNamestring">
     </td><td class="modal-container">
       Generate variable names from
-      <button type="link" class="action-link" ng-click="raiseHelp(3)">
+      <button type="link" class="action-link" 
+                          ng-click="showModal[3] = true">
       python expression</button> lambda i:
-      <div class="modal-window-help-string" ng-show="showHelp[3]">
+      <div class="modal-window-help-string" ng-show="showModal[3]">
         Python expression should depend on index i, and evaluate to a
         string containing the name of a valid EPICS variable. Invalid
         names are ignored.
         <button type="button" class="btn btn-link modal-window-close"
-                ng-click="clearHelp(3)">
+                ng-click="showModal[3] = false">
           <span class="glyphicon glyphicon-remove-sign"></span>
         </button>
       </div>
-      <div><input type="text" ng-model="Xaxis.nameString"> for
+      <span style="display:inline-block">
+      <input type="text" ng-model="Xaxis.nameString"> for
       i in range(0,<input type="number" min="1" max="500" step="1"
                                         ng-model="Xaxis.nameCount">)
+      </span>
     </td></tr>
 
-    <tr class="option-table-row-spacer"><td></td></tr>
-
-    <tr ng-show="!Xaxis.isTime && Xaxis.vars.length == 0"><td valign="top">
+    <tr ng-show="!Xaxis.isTime && Xaxis.vars.length == 0"
+        class="option-table-row">
+    <td>
       <input type="checkbox" ng-model="Xaxis.isMapIndex">
     </td><td>
       X axis is a map index, 
       i=range(<input type="number" min="0" max="500" ng-model="Xaxis.mapIndex0">,
       <input type="number" min="{{Xaxis.mapIndex0 + 1}}" max="500"
                            ng-model="Xaxis.mapIndex1">)
-    </td></tr>
-    <tr ng-show="!Xaxis.isTime && Xaxis.vars.length == 0">
-    <td></td><td class="modal-container">
+      <div class="modal-container">
       with title
-      <div class="modal-window-help-string" ng-show="showHelp[0]">
+      <button type="link" class="action-link" ng-click="showModal[0] = true">
+      string</button>
+      <div class="modal-window-help-string" ng-show="showModal[0]">
         String supports python-style index variable substitution using
         the literal {0}. Eg.
         <span style="background-color:white">TAGM {0} fadc scaler (Hz)</span>
@@ -272,39 +274,33 @@
         printf-style substituion expressions is supported; consult
         a python refrence for details.
         <button type="button" class="btn btn-link modal-window-close"
-                ng-click="clearHelp(0)">
+                ng-click="showModal[0] = false">
           <span class="glyphicon glyphicon-remove-sign"></span>
         </button>
       </div>
-      <button type="link" class="action-link" ng-click="raiseHelp(0)">
-      string</button>
-      <nobr>
+      <span style="display:inline-block">
       "<input type="text" ng-model="Xaxis.mapTitle">".format(i)
-      </nobr>
+      </span>
+      </div>
     </td></tr>
 
-    <tr class="option-table-row-spacer"><td></td></tr>
-
-    <tr height="10"><td></td></tr>
-    <tr><td valign="top">
+    <tr class="option-table-row">
+    <td>
       <i class="fa fa-square" aria-hidden="true"></i>
     </td><td>
       Axis limits 
-      <nobr>from
+      <span style="display:inline-block">from
       <input type="number" ng-model="Xaxis.lowLimit"> or
       <input type="checkbox" ng-model="Xaxis.lowLimitAuto"> auto
-      </nobr>
-    </td></tr>
-    <tr><td></td><td>
-      <nobr>to
+      </span>
+      <span style="display:inline-block">to
       <input type="number" ng-model="Xaxis.highLimit"> or
       <input type="checkbox" ng-model="Xaxis.highLimitAuto"> auto
-      </nobr>
+      </span>
     </td></tr>
 
-    <tr class="option-table-row-spacer"><td></td></tr>
-
-    <tr ng-show="!Xaxis.isTime"><td valign="top">
+    <tr ng-show="!Xaxis.isTime" class="option-table-row">
+    <td>
       <i class="fa fa-square" aria-hidden="true"></i>
     </td><td>
       Plotted values are: 
@@ -323,9 +319,8 @@
       </div>
     </td></tr>
 
-    <tr class="option-table-row-spacer"><td></td></tr>
-
-    <tr ng-show="!Xaxis.isTime"><td valign="top">
+    <tr ng-show="!Xaxis.isTime" class="option-table-row">
+    <td>
       <i class="fa fa-square" aria-hidden="true"></i>
     </td><td>
       How to interpolate between measurements:
@@ -346,23 +341,21 @@
 
   <div class="w3-col l4 w3-container">
     <h4 style="padding-left:50px; margin-top:20px">Y axis specification</h4>
-    <table><tr><td valign="top">
+    <table><tr class="option-table-row"><td>
       <input type="checkbox" ng-model="Yaxis.isRate">
     </td><td>
       Select rate (Hz) as the y coordinate for plotting.
     </td></tr>
 
-    <tr class="option-table-row-spacer"><td></td></tr>
-
-    <tr ng-show="!Yaxis.isRate"><td valign="top">
+    <tr ng-show="!Yaxis.isRate" class="option-table-row">
+    <td>
       <input type="checkbox" ng-model="Yaxis.isFreq">
     </td><td>
       Select frequency (samples) as the y coordinate for plotting.
     </td></tr>
 
-    <tr class="option-table-row-spacer"><td></td></tr>
-
-    <tr ng-show="!Yaxis.isFreq && !Yaxis.isRate"><td valign="top">
+    <tr ng-show="!Yaxis.isFreq && !Yaxis.isRate" class="option-table-row">
+    <td>
       <input type="checkbox" ng-model="Yaxis.importSelection"
                              ng-change="importYselection()">
     </td><td>
@@ -425,7 +418,7 @@
       </td>
     </tr>
     <tr ng-show="!Yaxis.isRate && !Yaxis.isFreq && Yaxis.vars.length > 0">
-      <td valign="top">
+      <td>
         <input type="checkbox" ng-model="Yaxis.clearSelection"
                                ng-change="clearYselection()">
       </td><td>
@@ -433,32 +426,34 @@
       </td>
     </tr>
 
-    <tr class="option-table-row-spacer"><td></td></tr>
-
-    <tr ng-show="!Yaxis.isTime && Yaxis.vars.length == 0"><td valign="top">
-      <input type="checkbox" ng-model="Yaxis.isNameString">
+    <tr ng-show="!Yaxis.isRate && !Yaxis.isFreq && Yaxis.vars.length == 0"
+        class="option-table-row">
+    <td>
+      <input type="checkbox" ng-model="Yaxis.isNamestring">
     </td><td class="modal-container">
       Generate variable names from
-      <button type="link" class="action-link" ng-click="raiseHelp(4)">
+      <button type="link" class="action-link"
+                          ng-click="showModal[4] = true">
       python expression</button> lambda j:
-      <div class="modal-window-help-string" ng-show="showHelp[4]">
+      <div class="modal-window-help-string" ng-show="showModal[4]">
         Python expression should depend on index j, and evaluate to a
         string containing the name of a valid EPICS variable. Invalid
         names are ignored.
         <button type="button" class="btn btn-link modal-window-close"
-                ng-click="clearHelp(4)">
+                ng-click="showModal[4] = false">
           <span class="glyphicon glyphicon-remove-sign"></span>
         </button>
       </div>
-      <div><input type="text" ng-model="Yaxis.varString"> for
+      <span style="display:inline-block">
+      <input type="text" ng-model="Yaxis.varString"> for
       j in range(0,<input type="number" min="1" max="500" step="1"
                                         ng-model="Yaxis.nameCount">)
+      </span>
     </td></tr>
 
-    <tr class="option-table-row-spacer"><td></td></tr>
-
-    <tr ng-show="Xaxis.vars.length == 0 && Yaxis.vars.length == 0">
-      <td valign="top">
+    <tr ng-show="Xaxis.vars.length == 0 && Yaxis.vars.length == 0 &&
+                 !Yaxis.isRate && !Yaxis.isFreq" class="option-table-row">
+      <td>
         <input type="checkbox" ng-model="Yaxis.isMapIndex">
       </td><td>
         Y axis is a map index, 
@@ -466,12 +461,11 @@
                                      ng-model="Yaxis.mapIndex0">
         <input type="number" min="{{Yaxis.mapIndex0 + 1}}" max="500"
                              ng-model="Yaxis.mapIndex1">)
-      </td>
-    </tr>
-    <tr><td></td>
-      <td class="modal-container">
+        <div class="modal-container">
         with title
-        <div class="modal-window-help-string" ng-show="showHelp[1]">
+        <button type="link" class="action-link" ng-click="showModal[1] = true">
+        string</button>
+        <div class="modal-window-help-string" ng-show="showModal[1]">
            String supports python-style index variable substitution using
           the literal {0}. Eg.
           <span style="background-color:white">TAGM {0} fadc scaler (Hz)</span>
@@ -480,41 +474,35 @@
           printf-style substituion expressions is supported; consult
           a python refrence for details.
           <button type="button" class="btn btn-link modal-window-close"
-                  ng-click="clearHelp(1)">
+                  ng-click="showModal[1] = false">
             <span class="glyphicon glyphicon-remove-sign"></span>
           </button>
         </div>
-        <button type="link" class="action-link" ng-click="raiseHelp(1)">
-        string</button>
-        <nobr>
+        <span style="display:inline-block">
         "<input type="text" ng-model="Yaxis.mapTitle">".format(i)
-        </nobr>
+        </span>
+        </div>
       </td>
     </tr>
 
-    <tr class="option-table-row-spacer"><td></td></tr>
-
-    <tr height="10"><td></td></tr>
-    <tr>
-      <td valign="top">
+    <tr class="option-table-row">
+      <td>
         <i class="fa fa-square" aria-hidden="true"></i>
       </td><td>
         Axis limits
-        <nobr>from
+        <span style="display:inline-block">from
         <input type="number" ng-model="Yaxis.lowLimit"> or
         <input type="checkbox" ng-model="Yaxis.lowLimitAuto"> auto
-        </nobr>
-      </td></tr>
-    <tr><td></td><td>
-      <nobr>to
-      <input type="number" ng-model="Yaxis.highLimit"> or
-      <input type="checkbox" ng-model="Yaxis.highLimitAuto"> auto
-      </nobr>
-    </td></tr>
+        </span>
+        <span style="display:inline-block">to
+        <input type="number" ng-model="Yaxis.highLimit"> or
+        <input type="checkbox" ng-model="Yaxis.highLimitAuto"> auto
+        </span>
+      </td>
+    </tr>
 
-    <tr class="option-table-row-spacer"><td></td></tr>
-
-    <tr ng-show="!Yaxis.isRate && !Yaxis.isFreq"><td valign="top">
+    <tr ng-show="!Yaxis.isRate && !Yaxis.isFreq" class="option-table-row">
+    <td>
       <i class="fa fa-square" aria-hidden="true"></i>
     </td><td>
       Plotted values are: 
@@ -533,9 +521,8 @@
       </div>
     </td></tr>
 
-    <tr class="option-table-row-spacer"><td></td></tr>
-
-    <tr ng-show="!Yaxis.isRate && !Yaxis.isFreq"><td valign="top">
+    <tr ng-show="!Yaxis.isRate && !Yaxis.isFreq" class="option-table-row">
+    <td>
       <i class="fa fa-square" aria-hidden="true"></i>
     </td><td>
       How to interpolate between measurements:
@@ -564,8 +551,8 @@
 
   <div class="w3-col l4 w3-container">
     <h4 style="padding-left:50px; margin-top:20px">Sequence definition</h4>
-    <table><tr><td valign="top">
-    <tr><td valign="top">
+    <table>
+    <tr class="option-table-row"><td>
       <i class="fa fa-square" aria-hidden="true"></i>
     </td><td>
       <div>
@@ -575,9 +562,8 @@
       <div>designated by frame index k in range(0,{{ Sequence.length }})</div>
     </td></tr>
 
-    <tr class="option-table-row-spacer"><td></td></tr>
-
-    <tr ng-show="Sequence.length > 1"><td valign="top">
+    <tr ng-show="Sequence.length > 1" class="option-table-row">
+    <td>
       <i class="fa fa-square" aria-hidden="true"></i>
     </td><td>
       The frame sequence:
@@ -611,8 +597,8 @@
   <div class="w3-col l4 w3-container"
        ng-show="Xaxis.isMapIndex || Yaxis.isMapIndex">
     <h4 style="padding-left:50px; margin-top:20px">Map variables</h4>
-    <table><tr><td valign="top">
-    <tr><td valign="top">
+    <table>
+    <tr class="option-table-row"><td>
       <i class="fa fa-square" aria-hidden="true"></i>
     </td><td>
       Python eval expression that returns mapped variable names:
@@ -652,14 +638,14 @@
 
   <div class="w3-col l8 w3-container" style="margin-top:18px">
   <div ng-show="State.preload" class="modal-container">
-    <div class="modal-window-help-string" ng-show="showHelp[2]"
+    <div class="modal-window-help-string" ng-show="showModal[2]"
          style="right:30%; bottom:0; top:auto;
                 font-weight:normal; font-size:100%">
       No existing EPICS variables were found matching this configuration.
       Please check the axis variable lists or map expression for errors
       and try again.
       <button type="button" class="btn btn-link modal-window-close"
-              ng-click="clearHelp(2)">
+              ng-click="showModal[2] = false">
         <span class="glyphicon glyphicon-remove-sign"></span>
       </button>
     </div>
@@ -1036,14 +1022,6 @@ app.controller('scalersCtrl', function($scope, $http) {
         $scope.Yaxis.vars[index].edit = flag
     };
 
-    $scope.raiseHelp = function(index) {
-        $scope.showHelp[index] = true;
-    };
-
-    $scope.clearHelp = function(index) {
-        $scope.showHelp[index] = false;
-    };
-
     $scope.deleteXselection = function(index) {
         var evar = $scope.Xaxis.vars.splice(index, 1);
         delete $scope.Xaxis.names[evar.name];
@@ -1069,19 +1047,7 @@ app.controller('scalersCtrl', function($scope, $http) {
             });
     };
 
-    $scope.setSequenceTime = function() {
-    };
-
-    $scope.setSequenceXaxis = function() {
-    };
-
-    $scope.setSequenceYaxis = function() {
-    };
-
-    $scope.setSequenceMap = function() {
-    };
-
-    $scope.evalMapVars = function() {
+    $scope.evalMapstring = function() {
         $scope.Map.vars = [];
         var req = "?request=eval_mapping";
         var i0 = 0;
@@ -1109,37 +1075,32 @@ app.controller('scalersCtrl', function($scope, $http) {
             function(response) {
                 $scope.Map.vars = response.data.vars;
                 $scope.Map.table =  response.data.table;
-                $scope.totalColumns = $scope.Map.vars.length + 1;
+                $scope.totalColumns += $scope.Map.vars.length;
                 if ($scope.totalColumns > 1) {
                     $scope.setState("paused");
                 }
                 else {
-                    $scope.raiseHelp(2);
+                    $scope.showModal[2] = true;
                 }
             },
             function(response) {
                 $scope.Map.vars = [];
                 $scope.Map.table = [];
-                $scope.totalColumns = 1;
-                $scope.raiseHelp(2);
+                $scope.showModal[2] = true;
             });
-    };
-
-    $scope.readyToGo = function() {
-        return ($scope.totalColumns > 1);
     };
 
     $scope.getTotalColumns = function() {
         $scope.totalColumns = 1;
-        if ($scope.Xaxis.vars > 0)
-            $scope.totalColumns += $scope.Xaxis.vars.length;
-        if ($scope.Yaxis.vars > 0)
-            $scope.totalColumns += $scope.Yaxis.vars.length;
+        $scope.totalColumns += $scope.Xaxis.vars.length;
+        $scope.totalColumns += $scope.Yaxis.vars.length;
         if ($scope.totalColumns == 1) {
-            if ($scope.Xaxis.isMapIndex || $scope.Yaxis.isMapIndex)
-                $scope.evalMapVars();
+            if ($scope.Xaxis.isNamestring || $scope.Yaxis.isNamestring)
+                $scope.evalNamestrings();
+            else if ($scope.Xaxis.isMapIndex || $scope.Yaxis.isMapIndex)
+                $scope.evalMapstring();
             else
-                $scope.raiseHelp(2);
+                $scope.showModal[2] = true;
         }
     };
 
@@ -1208,7 +1169,12 @@ app.controller('scalersCtrl', function($scope, $http) {
     $scope.State = {};
     $scope.setState("preload");
 
-    $scope.showHelp = [];
+    $scope.showModal = [];
+    $scope.showModal[0] = false;
+    $scope.showModal[1] = false;
+    $scope.showModal[2] = false;
+    $scope.showModal[3] = false;
+    $scope.showModal[4] = false;
 });
 
 </script>

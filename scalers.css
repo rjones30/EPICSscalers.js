@@ -71,6 +71,7 @@ i.fa-square {
     padding-right: 6px;
 }
 
-.option-table-row-spacer {
-    height: 6px;
+.option-table-row {
+    vertical-align: top;
+    border-top: 8px solid transparent;
 }
