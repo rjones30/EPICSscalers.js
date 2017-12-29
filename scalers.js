@@ -181,6 +181,18 @@ function do_test_mapstring(query, callback) {
   pyshell_query(line, callback);
 }
 
+function do_eval_mapstring(query, callback) {
+  const i0 = (query.i0)? query.i0.toString() : '0';
+  const i1 = (query.i1)? query.i1.toString() : '1';
+  const j0 = (query.j0)? query.j0.toString() : '0';
+  const j1 = (query.j1)? query.j1.toString() : '1';
+  const k0 = (query.k0)? query.k0.toString() : '0';
+  const k1 = (query.k1)? query.k1.toString() : '1';
+  const line = '(lambda i,j,k:' + query.mapstring + ')' +
+               '(' + i0 + ',' + j0 + ',' + k0 + ')';
+  callback(200, '{"vars":[{"testvar":10}],"table":[]}', 'json');
+}
+
 http.createServer(function (req, res) {
   var return_result = function(code, message, type) {
     res.writeHead(code, {'Content-Type': 'text/' + type});
@@ -200,6 +212,8 @@ http.createServer(function (req, res) {
       do_run_times(query.run, return_result);
     else if (query.request == "test_mapping")
       do_test_mapstring(query, return_result);
+    else if (query.request == "eval_mapping")
+      do_eval_mapstring(query, return_result);
     else
       return_result(400, "400 Bad Request", "plain");
   }

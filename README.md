@@ -1,4 +1,4 @@
-# EPICSscalers.js - web client for display and animation of EPICS scalers
+# EPICSscalers.js - web client/server for display and animation of EPICS scalers
 
 ## Author
 
@@ -6,21 +6,29 @@
 
 ## Description
 
+EPICSscalers.js a general client/server application based on 
+angular.js and node.js that provides a variety of graphical views
+of EPICS variables with animation in a modern web browser. It
+is written for the GlueX experiment, but the basic functionality
+would work in any EPICS environment.
+
 The scalers for the GlueX experiment are stored in the EPICS archiver
 operated by the Jefferson Lab accelerator group. This information is
 housed in mysql servers located behind a double firewall at the lab,
-which makes it a bear to access from off-site. Not only that, but the
-lookup and display tools for examining scalers are rudimentary and
-limited in functionality. This project was created to build a web
-browser-based interface to the scalers that users can easily extend
-to provide views and queries to meet their needs. It is designed in
-a client/server architecture. The client side is built using the
-angular.js application framework, which makes it fast and responsive.
-The backend is built using node.js, which makes it easy to deploy in
-userspace without needing root access or special permissions. Any
-user can start the backend as a node.js process listening on a 
-non-privileged port on some server in the counting house, and then
-access that server port over a ssh tunnel from anywhere on the web.
+which makes it difficult to access from off-site. This project was
+created to provide a web browser-based interface to the scalers
+that users can easily extend to provide views and queries to meet
+their needs.
+
+It is designed in a client/server architecture. The client side is
+built using the angular.js application framework, which makes it
+fast and responsive. The backend is built using node.js, which
+makes it able to handle asynchronous requests efficiently. It is
+easy to deploy in userspace without needing root access
+or special permissions. Any user can start the backend as a
+node.js process listening on a non-privileged port on some server
+in the counting house, and then access that server port from any
+machine in the counting house.
 
 ## History
 

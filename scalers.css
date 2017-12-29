@@ -70,3 +70,7 @@ i.fa-square {
     position: relative;
     padding-right: 6px;
 }
+
+.option-table-row-spacer {
+    height: 6px;
+}

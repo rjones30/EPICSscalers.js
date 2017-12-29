@@ -91,11 +91,8 @@
 
 <div class="w3-row">
   <div class="w3-col l2 w3-container"><p></p></div>
-  <h4 class="w3-col l10 w3-container">Time span selection: </h4>
-</div>
-<div class="w3-row">
-  <div class="w3-col l2 w3-container"><p></p></div>
-  <div class="w3-col l10 w3-container">
+  <div class="w3-col l10 w3-container" style="margin-top:20px">
+    <h4>Time span selection: </h4>
     <table style="display:inline-block">
     <tr><td>from</td><td align="right">
       <button ng-click="setStartRunStart()">start</button>
@@ -155,14 +152,14 @@
   <!-- x axis -->
 
   <div class="w3-col l4 w3-container">
-    <h4 style="padding-left:50px; margin-top:30px">X axis specification</h4>
+    <h4 style="padding-left:50px; margin-top:20px">X axis specification</h4>
     <table><tr><td valign="top">
       <input type="checkbox" ng-model="Xaxis.isTime">
     </td><td>
       Select time (seconds) as the x coordinate for plotting.
     </td></tr>
 
-    <tr class="axis-table-row-spacer"><td></td></tr>
+    <tr class="option-table-row-spacer"><td></td></tr>
 
     <tr ng-show="!Xaxis.isTime"><td valign="top">
       <input type="checkbox" ng-model="Xaxis.importSelection"
@@ -231,13 +228,35 @@
       Clear this list.
     </td></tr>
 
-    <tr class="axis-table-row-spacer"><td></td></tr>
+    <tr class="option-table-row-spacer"><td></td></tr>
+
+    <tr ng-show="!Xaxis.isTime && Xaxis.vars.length == 0"><td valign="top">
+      <input type="checkbox" ng-model="Xaxis.isNameString">
+    </td><td class="modal-container">
+      Generate variable names from
+      <button type="link" class="action-link" ng-click="raiseHelp(3)">
+      python expression</button> lambda i:
+      <div class="modal-window-help-string" ng-show="showHelp[3]">
+        Python expression should depend on index i, and evaluate to a
+        string containing the name of a valid EPICS variable. Invalid
+        names are ignored.
+        <button type="button" class="btn btn-link modal-window-close"
+                ng-click="clearHelp(3)">
+          <span class="glyphicon glyphicon-remove-sign"></span>
+        </button>
+      </div>
+      <div><input type="text" ng-model="Xaxis.nameString"> for
+      i in range(0,<input type="number" min="1" max="500" step="1"
+                                        ng-model="Xaxis.nameCount">)
+    </td></tr>
+
+    <tr class="option-table-row-spacer"><td></td></tr>
 
     <tr ng-show="!Xaxis.isTime && Xaxis.vars.length == 0"><td valign="top">
       <input type="checkbox" ng-model="Xaxis.isMapIndex">
     </td><td>
       X axis is a map index, 
-      i=range(<input type="number" min="0" max="500" ng-model="Xaxis.mapIndex0">
+      i=range(<input type="number" min="0" max="500" ng-model="Xaxis.mapIndex0">,
       <input type="number" min="{{Xaxis.mapIndex0 + 1}}" max="500"
                            ng-model="Xaxis.mapIndex1">)
     </td></tr>
@@ -264,7 +283,7 @@
       </nobr>
     </td></tr>
 
-    <tr class="axis-table-row-spacer"><td></td></tr>
+    <tr class="option-table-row-spacer"><td></td></tr>
 
     <tr height="10"><td></td></tr>
     <tr><td valign="top">
@@ -283,7 +302,7 @@
       </nobr>
     </td></tr>
 
-    <tr class="axis-table-row-spacer"><td></td></tr>
+    <tr class="option-table-row-spacer"><td></td></tr>
 
     <tr ng-show="!Xaxis.isTime"><td valign="top">
       <i class="fa fa-square" aria-hidden="true"></i>
@@ -304,7 +323,7 @@
       </div>
     </td></tr>
 
-    <tr class="axis-table-row-spacer"><td></td></tr>
+    <tr class="option-table-row-spacer"><td></td></tr>
 
     <tr ng-show="!Xaxis.isTime"><td valign="top">
       <i class="fa fa-square" aria-hidden="true"></i>
@@ -326,14 +345,14 @@
   <!-- y axis -->
 
   <div class="w3-col l4 w3-container">
-    <h4 style="padding-left:50px; margin-top:30px">Y axis specification</h4>
+    <h4 style="padding-left:50px; margin-top:20px">Y axis specification</h4>
     <table><tr><td valign="top">
       <input type="checkbox" ng-model="Yaxis.isRate">
     </td><td>
       Select rate (Hz) as the y coordinate for plotting.
     </td></tr>
 
-    <tr class="axis-table-row-spacer"><td></td></tr>
+    <tr class="option-table-row-spacer"><td></td></tr>
 
     <tr ng-show="!Yaxis.isRate"><td valign="top">
       <input type="checkbox" ng-model="Yaxis.isFreq">
@@ -341,7 +360,7 @@
       Select frequency (samples) as the y coordinate for plotting.
     </td></tr>
 
-    <tr class="axis-table-row-spacer"><td></td></tr>
+    <tr class="option-table-row-spacer"><td></td></tr>
 
     <tr ng-show="!Yaxis.isFreq && !Yaxis.isRate"><td valign="top">
       <input type="checkbox" ng-model="Yaxis.importSelection"
@@ -414,7 +433,29 @@
       </td>
     </tr>
 
-    <tr class="axis-table-row-spacer"><td></td></tr>
+    <tr class="option-table-row-spacer"><td></td></tr>
+
+    <tr ng-show="!Yaxis.isTime && Yaxis.vars.length == 0"><td valign="top">
+      <input type="checkbox" ng-model="Yaxis.isNameString">
+    </td><td class="modal-container">
+      Generate variable names from
+      <button type="link" class="action-link" ng-click="raiseHelp(4)">
+      python expression</button> lambda j:
+      <div class="modal-window-help-string" ng-show="showHelp[4]">
+        Python expression should depend on index j, and evaluate to a
+        string containing the name of a valid EPICS variable. Invalid
+        names are ignored.
+        <button type="button" class="btn btn-link modal-window-close"
+                ng-click="clearHelp(4)">
+          <span class="glyphicon glyphicon-remove-sign"></span>
+        </button>
+      </div>
+      <div><input type="text" ng-model="Yaxis.varString"> for
+      j in range(0,<input type="number" min="1" max="500" step="1"
+                                        ng-model="Yaxis.nameCount">)
+    </td></tr>
+
+    <tr class="option-table-row-spacer"><td></td></tr>
 
     <tr ng-show="Xaxis.vars.length == 0 && Yaxis.vars.length == 0">
       <td valign="top">
@@ -451,7 +492,7 @@
       </td>
     </tr>
 
-    <tr class="axis-table-row-spacer"><td></td></tr>
+    <tr class="option-table-row-spacer"><td></td></tr>
 
     <tr height="10"><td></td></tr>
     <tr>
@@ -470,6 +511,9 @@
       <input type="checkbox" ng-model="Yaxis.highLimitAuto"> auto
       </nobr>
     </td></tr>
+
+    <tr class="option-table-row-spacer"><td></td></tr>
+
     <tr ng-show="!Yaxis.isRate && !Yaxis.isFreq"><td valign="top">
       <i class="fa fa-square" aria-hidden="true"></i>
     </td><td>
@@ -489,7 +533,7 @@
       </div>
     </td></tr>
 
-    <tr class="axis-table-row-spacer"><td></td></tr>
+    <tr class="option-table-row-spacer"><td></td></tr>
 
     <tr ng-show="!Yaxis.isRate && !Yaxis.isFreq"><td valign="top">
       <i class="fa fa-square" aria-hidden="true"></i>
@@ -519,7 +563,7 @@
   <!-- Sequence definition -->
 
   <div class="w3-col l4 w3-container">
-    <h4 style="padding-left:50px; margin-top:30px">Sequence definition</h4>
+    <h4 style="padding-left:50px; margin-top:20px">Sequence definition</h4>
     <table><tr><td valign="top">
     <tr><td valign="top">
       <i class="fa fa-square" aria-hidden="true"></i>
@@ -531,9 +575,9 @@
       <div>designated by frame index k in range(0,{{ Sequence.length }})</div>
     </td></tr>
 
-    <tr class="axis-table-row-spacer"><td></td></tr>
+    <tr class="option-table-row-spacer"><td></td></tr>
 
-    <tr ng-show="Sequence.length > 0"><td valign="top">
+    <tr ng-show="Sequence.length > 1"><td valign="top">
       <i class="fa fa-square" aria-hidden="true"></i>
     </td><td>
       The frame sequence:
@@ -552,7 +596,7 @@
                           ng-model="Sequence.yaxis"
                           ng-change="setSequenceYaxis">
       subdivides the y axis variables into equal subsets
-      </div><div>
+      </div><div ng-show="Xaxis.isMapIndex || Yaxis.isMapIndex">
       <input type="radio" name="sequence_type" value="mapPartition"
                           ng-model="Sequence.map"
                           ng-change="setSequenceMap">
@@ -566,7 +610,7 @@
 
   <div class="w3-col l4 w3-container"
        ng-show="Xaxis.isMapIndex || Yaxis.isMapIndex">
-    <h4 style="padding-left:50px; margin-top:30px">Map variables</h4>
+    <h4 style="padding-left:50px; margin-top:20px">Map variables</h4>
     <table><tr><td valign="top">
     <tr><td valign="top">
       <i class="fa fa-square" aria-hidden="true"></i>
@@ -580,12 +624,18 @@
       <div ng-show="Map.functionString.length > 0">
       <button type="link" class="action-link" ng-click="mapTest()">
       Test</button> with
-      i=<input type="number" min="0" max="999" ng-model="Map.iIndex"
-                                               ng-change="mapTest()">,
-      j=<input type="number" min="0" max="999" ng-model="Map.jIndex"
-                                               ng-change="mapTest()">,
-      k=<input type="number" min="0" max="999" ng-model="Map.kIndex" 
-                                               ng-change="mapTest()">
+      i=<input type="number" min="{{ Xaxis.mapIndex0 }}"
+                             max="{{ Xaxis.mapIndex1 - 1 }}"
+                             ng-model="Map.iIndex"
+                             ng-change="mapTest()">,
+      j=<input type="number" min="{{ Yaxis.mapIndex0 }}"
+                             max="{{ Yaxis.mapIndex1 - 1 }}"
+                             ng-model="Map.jIndex"
+                             ng-change="mapTest()">,
+      k=<input type="number" min="0"
+                             max="{{ Sequence.length - 1 }}"
+                             ng-model="Map.kIndex" 
+                             ng-change="mapTest()">
       <div>returns {{ Map.testResult }}</div>
       </div>
     </td></tr>
@@ -593,35 +643,40 @@
   </div>
 </div>
 
-  <!-- payload summary -->
+<!-- fetch and plot the data -->
 
 <div class="w3-row">
   <div class="w3-col l2 w3-container"><p></p></div>
-  <div class="w3-col l4 w3-container">
-    <h4 style="padding-left:50px; margin-top:30px">Database fetch payload</h4>
-    <table><tr><td valign="top">
-    <tr><td valign="top">
-      <i class="fa fa-square" aria-hidden="true"></i>
-    </td><td>
-      Total database rows: {{ totalTimeSamples() }}
-    </td></tr>
-    <tr><td valign="top">
-      <i class="fa fa-square" aria-hidden="true"></i>
-    </td><td>
-      Total database columns: {{ totalVariableCount() }}
-    </td></tr>
-    <tr><td valign="top">
-      <i class="fa fa-square" aria-hidden="true"></i>
-    </td><td>
-      Browser memory footprint:
-    </td></tr>
-    </table>
+
+  <!-- payload summary, fetch button -->
+
+  <div class="w3-col l8 w3-container" style="margin-top:18px">
+  <div ng-show="State.preload" class="modal-container">
+    <div class="modal-window-help-string" ng-show="showHelp[2]"
+         style="right:30%; bottom:0; top:auto;
+                font-weight:normal; font-size:100%">
+      No existing EPICS variables were found matching this configuration.
+      Please check the axis variable lists or map expression for errors
+      and try again.
+      <button type="button" class="btn btn-link modal-window-close"
+              ng-click="clearHelp(2)">
+        <span class="glyphicon glyphicon-remove-sign"></span>
+      </button>
+    </div>
+    <button type="btn btn-link" style="font-weight:bold; font-size:150%; width:100%"
+            ng-click="getPayload()">go</button>
+  </div>
+  <div ng-show="State.paused" style="font-weight:bold; font-size:120%">
+    Total database fetch payload is {{ totalRows }} x {{ totalColumns }}
+    = {{ totalRows * totalColumns }}
+    ({{ (totalRows * totalColumns * 10 / 1e6).toPrecision(3) }} MB) :
+    <button type="btn btn-link" ng-click="fetchPayload()">go for it</button>
   </div>
 
+  </div>
 </div>
 
 </form>
-
 
 
 <!-- Angular.js application code begins here -->
@@ -1026,6 +1081,87 @@ app.controller('scalersCtrl', function($scope, $http) {
     $scope.setSequenceMap = function() {
     };
 
+    $scope.evalMapVars = function() {
+        $scope.Map.vars = [];
+        var req = "?request=eval_mapping";
+        var i0 = 0;
+        var i1 = 1;
+        if ($scope.Xaxis.isMapIndex) {
+            i0 = $scope.Xaxis.mapIndex0;
+            i1 = $scope.Xaxis.mapIndex1;
+        }
+        var j0 = 0;
+        var j1 = 1;
+        if ($scope.Yaxis.isMapIndex) {
+            j0 = $scope.Yaxis.mapIndex0;
+            j1 = $scope.Yaxis.mapIndex1;
+        }
+        var k0 = 0;
+        var k1 = $scope.Sequence.length;
+        req += "&mapstring=" + encodeURIComponent($scope.Map.functionString);
+        req += "&i0=" + encodeURIComponent(i0.toString());
+        req += "&i1=" + encodeURIComponent(i1.toString());
+        req += "&j0=" + encodeURIComponent(j0.toString());
+        req += "&j1=" + encodeURIComponent(j1.toString());
+        req += "&k0=" + encodeURIComponent(k0.toString());
+        req += "&k1=" + encodeURIComponent(k1.toString());
+        $http({ method : "GET", url : req }).then(
+            function(response) {
+                $scope.Map.vars = response.data.vars;
+                $scope.Map.table =  response.data.table;
+                $scope.totalColumns = $scope.Map.vars.length + 1;
+                if ($scope.totalColumns > 1) {
+                    $scope.setState("paused");
+                }
+                else {
+                    $scope.raiseHelp(2);
+                }
+            },
+            function(response) {
+                $scope.Map.vars = [];
+                $scope.Map.table = [];
+                $scope.totalColumns = 1;
+                $scope.raiseHelp(2);
+            });
+    };
+
+    $scope.readyToGo = function() {
+        return ($scope.totalColumns > 1);
+    };
+
+    $scope.getTotalColumns = function() {
+        $scope.totalColumns = 1;
+        if ($scope.Xaxis.vars > 0)
+            $scope.totalColumns += $scope.Xaxis.vars.length;
+        if ($scope.Yaxis.vars > 0)
+            $scope.totalColumns += $scope.Yaxis.vars.length;
+        if ($scope.totalColumns == 1) {
+            if ($scope.Xaxis.isMapIndex || $scope.Yaxis.isMapIndex)
+                $scope.evalMapVars();
+            else
+                $scope.raiseHelp(2);
+        }
+    };
+
+    $scope.getTotalRows = function() {
+        return $scope.timeSpan.sampleCount * 
+               $scope.timeSpan.sampleWidth;
+    };
+
+    $scope.setState = function(new_state) {
+        for (state in $scope.State)
+            $scope.State[state] = false;
+        $scope.State[new_state] = true;
+    }
+
+    $scope.getPayload = function() {
+        $scope.totalRows = $scope.getTotalRows();
+        $scope.totalColumns = $scope.getTotalColumns();
+    };
+
+    $scope.fetchPayload = function() {
+    };
+
     $scope.EPICS = {};
     $scope.EPICS.channelPages = 0;
     $scope.EPICS.channelPageSize = 15;
@@ -1044,9 +1180,13 @@ app.controller('scalersCtrl', function($scope, $http) {
     $scope.Xaxis = {};
     $scope.Xaxis.vars = [];
     $scope.Xaxis.names = {};
+    $scope.Xaxis.nameCount = 1;
+    $scope.Xaxis.nameString = "";
     $scope.Yaxis = {};
     $scope.Yaxis.vars = [];
     $scope.Yaxis.names = {};
+    $scope.Yaxis.nameCount = 1;
+    $scope.Yaxis.nameString = "";
 
     $scope.Xaxis.mapIndex0 = 0;
     $scope.Xaxis.mapIndex1 = 1;
@@ -1065,7 +1205,10 @@ app.controller('scalersCtrl', function($scope, $http) {
     $scope.Sequence = {};
     $scope.Sequence.length = 1;
 
-    $scope.showHelp = [0];
+    $scope.State = {};
+    $scope.setState("preload");
+
+    $scope.showHelp = [];
 });
 
 </script>
