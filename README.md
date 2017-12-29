@@ -24,10 +24,10 @@ interface to the scalers that is fast and responsive. Users can
 easily extend it provide views and queries to meet their needs.
 
 It is designed in a client/server architecture. The client side is
-built using the angular.js application framework, which makes it
-fast and responsive. The backend is built using node.js, which
-makes it able to handle asynchronous requests efficiently. It is
-easy to deploy in userspace without needing root access
+built using the modular angular.js application framework, which
+makes it fast and responsive. The backend is built using node.js,
+which makes it able to handle asynchronous requests efficiently.
+It is easy to deploy in userspace without needing root access
 or special permissions. Any user can start the backend as a
 node.js process listening on a non-privileged port on some server
 in the counting house, and then access that server port from any
