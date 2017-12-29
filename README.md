@@ -15,10 +15,13 @@ would work in any EPICS environment.
 The scalers for the GlueX experiment are stored in the EPICS archiver
 operated by the Jefferson Lab accelerator group. This information is
 housed in mysql servers located behind a double firewall at the lab,
-which makes it difficult to access from off-site. This project was
-created to provide a web browser-based interface to the scalers
-that users can easily extend to provide views and queries to meet
-their needs.
+and accessed through a low-level C++ API known as MYA. A tool called
+myaviewer provided by the accelerator group is capable of producing
+some useful plots, but its functionality is limited and the gui is 
+extremely slow to use from off-site because it is X11-based. The
+EPICSscalers.js project was created to provide a web browser-based
+interface to the scalers that is fast and responsive. Users can
+easily extend it provide views and queries to meet their needs.
 
 It is designed in a client/server architecture. The client side is
 built using the angular.js application framework, which makes it
