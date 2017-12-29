@@ -63,7 +63,7 @@ displayed should be self-explantory.
 
 The server host must have the node.js package installed. It must also
 have direct network access to the opsmya0... servers in the acc.jlab.org
-domain, and the firewall must allow outside access to the server port,
+domain, and the host firewall must allow access to the server port,
 eg. 8080. Any modern browser should be capable of supporting the
 angular.js client.
 
