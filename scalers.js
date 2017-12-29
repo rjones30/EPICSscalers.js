@@ -1,7 +1,56 @@
-var http = require('http');
-var mysql = require('mysql');
-var url = require('url');
-var fs = require('fs');
+const http = require('http');
+const mysql = require('mysql');
+const url = require('url');
+const fs = require('fs');
+
+const child_process = require('child_process');
+const pyshell = child_process.spawn('./pyshell.py');
+pyshell.stdout.on('data', pyshell_output);
+pyshell.stdout.on('error', pyshell_fault);
+pyshell.stdout.on('close', pyshell_close);
+pyshell.stderr.on('data', pyshell_error);
+pyshell.stderr.on('error', pyshell_fault);
+pyshell.stderr.on('close', pyshell_close);
+var pyshell_queue = [];
+
+function pyshell_query(message, callback) {
+  pyshell_queue.push({message: message, callback: callback});
+  if (pyshell_queue.length == 1) {
+    pyshell.stdin.write(message + '\n');
+  }
+}
+
+function pyshell_output(data) {
+  if (pyshell_queue.length == 0) {
+    console.log("unexpected message from pyshell: " + data);
+    return;
+  }
+  var req = pyshell_queue.shift();
+  req.callback(200, data, 'plain');
+  if (pyshell_queue.length > 0) {
+    pyshell.stdin.write(pyshell_queue[0].message + '\n');
+  }
+}
+
+function pyshell_error(data) {
+  if (pyshell_queue.length == 0) {
+    console.log("unexpected error from pyshell: " + data);
+    return;
+  }
+  var req = pyshell_queue.shift();
+  req.callback(200, 'PYTHON ERROR: ' + data, 'plain');
+  if (pyshell_queue.length > 0) {
+    pyshell.stdin.write(pyshell_queue[0].message);
+  }
+}
+
+function pyshell_fault(data) {
+  console.log('pyshell_fault!');
+}
+
+function pyshell_close(data) {
+  console.log('pyshell_close!');
+}
 
 function do_display_webform(callback) {
   fs.readFile('scalers.html', 'utf8', function(err, contents) {
@@ -123,11 +172,21 @@ function do_run_times(run, callback) {
   });
 }
 
+function do_test_mapstring(query, callback) {
+  const i = (query.i)? query.i.toString() : '0';
+  const j = (query.j)? query.j.toString() : '0';
+  const k = (query.k)? query.k.toString() : '0';
+  const line = '(lambda i,j,k:' + query.mapstring + ')' +
+               '(' + i + ',' + j + ',' + k + ')';
+  pyshell_query(line, callback);
+}
+
 http.createServer(function (req, res) {
   var return_result = function(code, message, type) {
     res.writeHead(code, {'Content-Type': 'text/' + type});
     res.end(message);
-    console.log("sent message in format " + type + " length " + message.length.toString())
+    console.log("sent message in format " + type + 
+                " length " + message.length.toString())
   };
   var response = url.parse(req.url, true);
   var pathname = response.pathname;
@@ -139,6 +198,8 @@ http.createServer(function (req, res) {
       do_list_channels(query.group, return_result);
     else if (query.request == "run_times")
       do_run_times(query.run, return_result);
+    else if (query.request == "test_mapping")
+      do_test_mapstring(query, return_result);
     else
       return_result(400, "400 Bad Request", "plain");
   }

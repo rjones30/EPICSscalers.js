@@ -16,10 +16,29 @@ tr.underline-row td {
 
 .modal-container {
 	position:relative;
-	display:inline-block;
 }
 
 .modal-window-axis-var {
+	position: absolute;
+	right: 0;
+	top: 0;
+	width: 320px;
+	text-align: left;
+    border: 1px solid;
+    border-radius: 10px;
+    padding: 40px 25px 25px 25px;
+    box-shadow: 5px 10px 8px #888888;
+	background-color: #e0e0e0;
+	z-index: 999;
+}
+
+.modal-window-close {
+	position: absolute;
+	right: 0;
+	top: 0;
+}
+
+.modal-window-help-string {
 	position: absolute;
 	right: 0;
 	top: 0;
@@ -33,14 +52,21 @@ tr.underline-row td {
 	z-index: 999;
 }
 
-.modal-window-close {
-	position: absolute;
-	right: 0;
-	top: 0;
-}
-
 .btn-glyph {
 	padding: 0;
     border: none;
-    background: none
+    background: none;
+}
+
+button.action-link {
+	padding: 0;
+    border: none;
+    background: none;
+    text-decoration: underline;
+}
+
+i.fa-square {
+	color: gray;
+    position: relative;
+    padding-right: 6px;
 }

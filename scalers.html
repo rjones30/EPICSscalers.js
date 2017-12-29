@@ -4,17 +4,18 @@
 <title>GlueX Scalers Display and Animation</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <!-- Additional packages for reference, do not include unless needed ==>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 <script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
 <!== End of Additional packages for reference, do not include unless needed -->
 <link rel="stylesheet" type="text/css" href="scalers.css">
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
 </head>
 
-<body ng-app="GlueXscalers" ng-controller="scalersCtrl">
+<body ng-app="GlueXscalers" ng-controller="scalersCtrl" ng-cloak>
 <h1 align="center">GlueX Scalers Display and Animation</h1>
 <form>
 
@@ -35,7 +36,6 @@
         <input type="text" ng-model="EPICS.channelFilterRE" size="25" 
                placeholder="grep-style regular expression"
                ng-change="filterChannels()">
-        </input>
       </td></tr>
       <tr><td ng-if="EPICS.channelPages.length > 1">
         <button ng-repeat="$index in EPICS.channelPages" 
@@ -90,7 +90,6 @@
 <!-- Time span selection -->
 
 <div class="w3-row">
-  <br/>
   <div class="w3-col l2 w3-container"><p></p></div>
   <h4 class="w3-col l10 w3-container">Time span selection: </h4>
 </div>
@@ -102,30 +101,26 @@
       <button ng-click="setStartRunStart()">start</button>
       <input type="number" min="1" max="999999999"
              placeholder="run number" ng-model="timeSpan.runStart">
-      </input>
       <button ng-click="setStartRunEnd()">end</button>
     </td></tr>
     <tr><td colspan="2">
       <input type="datetime-local" name="timeStart"
               step="0.001" ng-model="timeSpan.timeStart"
               ng-change="setTimeSpanTimes()">
-      </input>
     </td></tr>
     </table>
-    <table style="display:inline-block" width="50px"></table>
+    <table style="display:inline-block" width="50"></table>
     <table style="display:inline-block">
     <tr><td>until</td><td align="right">
       <button ng-click="setEndRunStart()">start</button>
       <input type="number" min="1" max="999999999"
              placeholder="run number" ng-model="timeSpan.runEnd">
-      </input>
       <button ng-click="setEndRunEnd()">end</button>
     </td></tr>
     <tr><td colspan="2">
       <input type="datetime-local" name="timeEnd"
              step="0.001" ng-model="timeSpan.timeEnd"
              ng-change="setTimeSpanTimes()">
-    </input>
     </td></tr>
     </table>
   </div>
@@ -140,11 +135,9 @@
   seconds spanned by
   <input type="number" min="1" max="999999" step="1"
          ng-model="timeSpan.sampleCount" ng-change="setTimeSampleCount()">
-  </input>
   evenly spaced samples of
   <input type="number" min="1" max="9999" step="1"
          ng-model="timeSpan.sampleWidth" ng-change="setTimeSampleWidth()">
-  </input>
   seconds each, total coverage is
   {{
     (1e5 * timeSpan.sampleCount * timeSpan.sampleWidth / 
@@ -162,19 +155,25 @@
   <!-- x axis -->
 
   <div class="w3-col l4 w3-container">
-    <h4 style="padding-left: 50px">X axis specification</h4>
-    <input type="checkbox" ng-model="Xaxis.isTime">
-    Select time (seconds) as the x coordinate for plotting.
-    </input><br/>
-    <div ng-show="!Xaxis.isTime"</div>
+    <h4 style="padding-left:50px; margin-top:30px">X axis specification</h4>
+    <table><tr><td valign="top">
+      <input type="checkbox" ng-model="Xaxis.isTime">
+    </td><td>
+      Select time (seconds) as the x coordinate for plotting.
+    </td></tr>
+
+    <tr class="axis-table-row-spacer"><td></td></tr>
+
+    <tr ng-show="!Xaxis.isTime"><td valign="top">
       <input type="checkbox" ng-model="Xaxis.importSelection"
                              ng-change="importXselection()">
+    </td><td>
       Import selected EPICS variables from above listing.
-      </input>
-      <div ng-show="Xaxis.vars.length">
+    </td></tr>
+    <tr ng-show="!Xaxis.isTime && Xaxis.vars.length > 0"><td></td><td>
       <table style="padding-left: 20px">
-        <tr class="underline-row" height="10px">
-        <td colspan="2" width="300px"></td></tr>
+        <tr class="underline-row" height="10">
+        <td colspan="2" width="300"></td></tr>
         <tr ng-repeat="evar in Xaxis.vars track by $index">
           <td>
           {{
@@ -185,17 +184,17 @@
                            + ']' : '')
           }}
           </td>
-          <td align="right" width="90px">
-            <div class="modal-container" 
+          <td align="right" width="90">
+            <div class="modal-container" style="display:inline-block"
                  ng-show="evar.size > 1">
               <div class="modal-window-axis-var" ng-show="evar.edit">
                 {{ evar.name }}<br/> index from 
                 <input type="number" min="0" step="1"
                        max="{{evar.max_index}}" ng-model="evar.min_index">
-                </input> to
+                to
                 <input type="number" step="1"
                        min="{{evar.min_index}}" max="{{evar.size - 1}}"
-                       ng-model="evar.max_index"></input>
+                       ng-model="evar.max_index">
                 <button type="button" class="btn btn-link modal-window-close"
                         ng-click="editXselection($index, 0)">
                   <span class="glyphicon glyphicon-remove-sign"></span>
@@ -213,7 +212,7 @@
           </td>
         </tr>
         <tr ng-if="Xaxis.importTruncated">
-         <td colspan="2" width="300px" style="color: red">
+         <td colspan="2" width="300" style="color: red">
           <i>Import operation was truncated because you attempted to add 
           more than {{ Xaxis.importTruncated }} entries to the list. 
           Are you sure this is what you want to do? If you are really
@@ -222,35 +221,138 @@
           of the variables of interest have been imported.
           And be prepared to wait.</i>
         </td></tr>
-        <tr class="overline-row" height="10px"><td colspan="2"></td></tr>
+        <tr class="overline-row" height="10"><td colspan="2"></td></tr>
       </table>
+    </td></tr>
+    <tr ng-show="Xaxis.vars.length"><td valign="top">
       <input type="checkbox" ng-model="Xaxis.clearSelection"
                              ng-change="clearXselection()">
-        Clear this list.
-      </input>
+    </td><td>
+      Clear this list.
+    </td></tr>
+
+    <tr class="axis-table-row-spacer"><td></td></tr>
+
+    <tr ng-show="!Xaxis.isTime && Xaxis.vars.length == 0"><td valign="top">
+      <input type="checkbox" ng-model="Xaxis.isMapIndex">
+    </td><td>
+      X axis is a map index, 
+      i=range(<input type="number" min="0" max="500" ng-model="Xaxis.mapIndex0">
+      <input type="number" min="{{Xaxis.mapIndex0 + 1}}" max="500"
+                           ng-model="Xaxis.mapIndex1">)
+    </td></tr>
+    <tr ng-show="!Xaxis.isTime && Xaxis.vars.length == 0">
+    <td></td><td class="modal-container">
+      with title
+      <div class="modal-window-help-string" ng-show="showHelp[0]">
+        String supports python-style index variable substitution using
+        the literal {0}. Eg.
+        <span style="background-color:white">TAGM {0} fadc scaler (Hz)</span>
+        produces a sequence of titles of the general form
+        "TAGM 93 fadc scaler (Hz)" for i=93. A fairly complete set of
+        printf-style substituion expressions is supported; consult
+        a python refrence for details.
+        <button type="button" class="btn btn-link modal-window-close"
+                ng-click="clearHelp(0)">
+          <span class="glyphicon glyphicon-remove-sign"></span>
+        </button>
       </div>
-    </div>
+      <button type="link" class="action-link" ng-click="raiseHelp(0)">
+      string</button>
+      <nobr>
+      "<input type="text" ng-model="Xaxis.mapTitle">".format(i)
+      </nobr>
+    </td></tr>
+
+    <tr class="axis-table-row-spacer"><td></td></tr>
+
+    <tr height="10"><td></td></tr>
+    <tr><td valign="top">
+      <i class="fa fa-square" aria-hidden="true"></i>
+    </td><td>
+      Axis limits 
+      <nobr>from
+      <input type="number" ng-model="Xaxis.lowLimit"> or
+      <input type="checkbox" ng-model="Xaxis.lowLimitAuto"> auto
+      </nobr>
+    </td></tr>
+    <tr><td></td><td>
+      <nobr>to
+      <input type="number" ng-model="Xaxis.highLimit"> or
+      <input type="checkbox" ng-model="Xaxis.highLimitAuto"> auto
+      </nobr>
+    </td></tr>
+
+    <tr class="axis-table-row-spacer"><td></td></tr>
+
+    <tr ng-show="!Xaxis.isTime"><td valign="top">
+      <i class="fa fa-square" aria-hidden="true"></i>
+    </td><td>
+      Plotted values are: 
+      <div>
+      <input type="radio" name="Xaxis_sumType" value="cummulative"
+                          ng-model="Xaxis.sumType">
+      cummulative, summed forward from the start time
+      </div><div>
+      <input type="radio" name="Xaxis_sumType" value="incremental"
+                          ng-model="Xaxis.sumType">
+      incremental, summed within each time sample interval
+      </div><div>
+      <input type="radio" name="Xaxis_sumType" value="instantaneous"
+                          ng-model="Xaxis.isInstantaneous">
+      instantaneous, mean rate within each sample interval
+      </div>
+    </td></tr>
+
+    <tr class="axis-table-row-spacer"><td></td></tr>
+
+    <tr ng-show="!Xaxis.isTime"><td valign="top">
+      <i class="fa fa-square" aria-hidden="true"></i>
+    </td><td>
+      How to interpolate between measurements:
+      <div>
+      <input type="radio" name="Xaxis_interpol" value="linearInterp"
+                          ng-model="Xaxis.interpol">
+      linear interpolation, assume smooth evolution
+      </div><div>
+      <input type="radio" name="Xaxis_interpol" value="step"
+                          ng-model="Xaxis.interpol">
+      step-wise constant, assume discontinuous evolution
+      </div>
+    </td></tr>
+    </table>
   </div>
 
   <!-- y axis -->
 
   <div class="w3-col l4 w3-container">
-    <h4 style="padding-left: 50px">Y axis specification</h4>
-    <input type="checkbox" ng-model="Yaxis.isRate">
-    Select rate (Hz) as the y coordinate for plotting.
-    </input><br/>
-    <div ng-show="!Yaxis.isRate"</div>
+    <h4 style="padding-left:50px; margin-top:30px">Y axis specification</h4>
+    <table><tr><td valign="top">
+      <input type="checkbox" ng-model="Yaxis.isRate">
+    </td><td>
+      Select rate (Hz) as the y coordinate for plotting.
+    </td></tr>
+
+    <tr class="axis-table-row-spacer"><td></td></tr>
+
+    <tr ng-show="!Yaxis.isRate"><td valign="top">
       <input type="checkbox" ng-model="Yaxis.isFreq">
+    </td><td>
       Select frequency (samples) as the y coordinate for plotting.
-      </input><br/>
-      <div ng-show="!Yaxis.isFreq"</div>
-        <input type="checkbox" ng-model="Yaxis.importSelection"
-                               ng-change="importYselection()">
-        Import selected EPICS variables from above listing.
-        </input>
-        <div ng-show="Yaxis.vars.length">
+    </td></tr>
+
+    <tr class="axis-table-row-spacer"><td></td></tr>
+
+    <tr ng-show="!Yaxis.isFreq && !Yaxis.isRate"><td valign="top">
+      <input type="checkbox" ng-model="Yaxis.importSelection"
+                             ng-change="importYselection()">
+    </td><td>
+      Import selected EPICS variables from above listing.
+    </td></tr>
+    <tr ng-show="!Yaxis.isRate && !Yaxis.isFreq && Yaxis.vars.length > 0">
+      <td></td><td>
         <table style="padding-left:20px">
-        <tr class="underline-row" height="10px"><td colspan="2"></td</tr>
+        <tr class="underline-row" height="10"><td colspan="2"></td</tr>
         <tr ng-repeat="evar in Yaxis.vars track by $index">
           <td>
           {{
@@ -261,17 +363,17 @@
                            + ']' : '')
           }}
           </td>
-          <td align="right" width="90px">
-            <div class="modal-container" 
+          <td align="right" width="90">
+            <div class="modal-container" style="display:inline-block"
                  ng-show="evar.size > 1">
               <div class="modal-window-axis-var" ng-show="evar.edit">
                 {{ evar.name }}<br/> index from 
                 <input type="number" min="0" step="1"
                        max="{{evar.max_index}}" ng-model="evar.min_index">
-                </input> to
+                to
                 <input type="number" step="1"
                        min="{{evar.min_index}}" max="{{evar.size - 1}}"
-                       ng-model="evar.max_index"></input>
+                       ng-model="evar.max_index">
                 <button type="button" class="btn btn-link modal-window-close"
                         ng-click="editXselection($index, 0)">
                   <span class="glyphicon glyphicon-remove-sign"></span>
@@ -289,7 +391,7 @@
           </td>
         </tr>
         <tr ng-if="Yaxis.importTruncated">
-          <td colspan="2" width="300px" style="color: red">
+          <td colspan="2" width="300" style="color: red">
           <i>Import operation was truncated because you attempted to add 
           more than {{ Xaxis.importTruncated }} entries to the list. 
           Are you sure this is what you want to do? If you are really
@@ -299,18 +401,223 @@
           And be prepared to wait.</i>
           </td>
         </tr>
-        <tr class="overline-row" height="10px"><td colspan="2"></td></tr>
+        <tr class="overline-row" height="10"><td colspan="2"></td></tr>
         </table>
+      </td>
+    </tr>
+    <tr ng-show="!Yaxis.isRate && !Yaxis.isFreq && Yaxis.vars.length > 0">
+      <td valign="top">
         <input type="checkbox" ng-model="Yaxis.clearSelection"
                                ng-change="clearYselection()">
-          Clear this list.
-        </input>
+      </td><td>
+        Clear this list.
+      </td>
+    </tr>
+
+    <tr class="axis-table-row-spacer"><td></td></tr>
+
+    <tr ng-show="Xaxis.vars.length == 0 && Yaxis.vars.length == 0">
+      <td valign="top">
+        <input type="checkbox" ng-model="Yaxis.isMapIndex">
+      </td><td>
+        Y axis is a map index, 
+        j=range(<input type="number" min="0" max="500" 
+                                     ng-model="Yaxis.mapIndex0">
+        <input type="number" min="{{Yaxis.mapIndex0 + 1}}" max="500"
+                             ng-model="Yaxis.mapIndex1">)
+      </td>
+    </tr>
+    <tr><td></td>
+      <td class="modal-container">
+        with title
+        <div class="modal-window-help-string" ng-show="showHelp[1]">
+           String supports python-style index variable substitution using
+          the literal {0}. Eg.
+          <span style="background-color:white">TAGM {0} fadc scaler (Hz)</span>
+          produces a sequence of titles of the general form
+          "TAGM 93 fadc scaler (Hz)" for i=93. A fairly complete set of
+          printf-style substituion expressions is supported; consult
+          a python refrence for details.
+          <button type="button" class="btn btn-link modal-window-close"
+                  ng-click="clearHelp(1)">
+            <span class="glyphicon glyphicon-remove-sign"></span>
+          </button>
         </div>
+        <button type="link" class="action-link" ng-click="raiseHelp(1)">
+        string</button>
+        <nobr>
+        "<input type="text" ng-model="Yaxis.mapTitle">".format(i)
+        </nobr>
+      </td>
+    </tr>
+
+    <tr class="axis-table-row-spacer"><td></td></tr>
+
+    <tr height="10"><td></td></tr>
+    <tr>
+      <td valign="top">
+        <i class="fa fa-square" aria-hidden="true"></i>
+      </td><td>
+        Axis limits
+        <nobr>from
+        <input type="number" ng-model="Yaxis.lowLimit"> or
+        <input type="checkbox" ng-model="Yaxis.lowLimitAuto"> auto
+        </nobr>
+      </td></tr>
+    <tr><td></td><td>
+      <nobr>to
+      <input type="number" ng-model="Yaxis.highLimit"> or
+      <input type="checkbox" ng-model="Yaxis.highLimitAuto"> auto
+      </nobr>
+    </td></tr>
+    <tr ng-show="!Yaxis.isRate && !Yaxis.isFreq"><td valign="top">
+      <i class="fa fa-square" aria-hidden="true"></i>
+    </td><td>
+      Plotted values are: 
+      <div>
+      <input type="radio" name="Yaxis_sumType" value="cummulative"
+                          ng-model="Yaxis.sumType">
+      cummulative, summed forward from the start time
+      </div><div>
+      <input type="radio" name="Yaxis_sumType" value="incremental"
+                          ng-model="Yaxis.sumType">
+      incremental, summed within each time sample interval
+      </div><div>
+      <input type="radio" name="Yaxis_sumType" value="instantaneous"
+                          ng-model="Yaxis.isInstantaneous">
+      instantaneous, mean rate within each sample interval
       </div>
-    </div>
+    </td></tr>
+
+    <tr class="axis-table-row-spacer"><td></td></tr>
+
+    <tr ng-show="!Yaxis.isRate && !Yaxis.isFreq"><td valign="top">
+      <i class="fa fa-square" aria-hidden="true"></i>
+    </td><td>
+      How to interpolate between measurements:
+      <div>
+      <input type="radio" name="Yaxis_interpol" value="linearInterp"
+                          ng-model="Yaxis.interpol">
+      linear interpolation, assume smooth evolution
+      </div><div>
+      <input type="radio" name="Yaxis_interpol" value="step"
+                          ng-model="Yaxis.interpol">
+      step-wise constant, assume discontinuous evolution
+      </div>
+    </td></tr>
+    </table>
   </div>
 
   <div class="w3-col l2 w3-container"><p></p></div>
+</div>
+
+<!-- sequence and map definitions -->
+
+<div class="w3-row">
+  <div class="w3-col l2 w3-container"><p></p></div>
+
+  <!-- Sequence definition -->
+
+  <div class="w3-col l4 w3-container">
+    <h4 style="padding-left:50px; margin-top:30px">Sequence definition</h4>
+    <table><tr><td valign="top">
+    <tr><td valign="top">
+      <i class="fa fa-square" aria-hidden="true"></i>
+    </td><td>
+      <div>
+      Plot the above data in a sequence of 
+      <input type="number" min="0" max="999" step="1" ng-model="Sequence.length">
+      frames,</div>
+      <div>designated by frame index k in range(0,{{ Sequence.length }})</div>
+    </td></tr>
+
+    <tr class="axis-table-row-spacer"><td></td></tr>
+
+    <tr ng-show="Sequence.length > 0"><td valign="top">
+      <i class="fa fa-square" aria-hidden="true"></i>
+    </td><td>
+      The frame sequence:
+      <div>
+      <input type="radio" name="sequence_type" value="timePartition"
+                          ng-model="Sequence.time"
+                          ng-change="setSequenceTime">
+      subdivides the time domain into segments of equal length
+      </div><div>
+      <input type="radio" name="sequence_type" value="xaxisPartition"
+                          ng-model="Sequence.xaxis"
+                          ng-change="setSequenceXaxis">
+      subdivides the x axis variables into equal subsets
+      </div><div>
+      <input type="radio" name="sequence_type" value="yaxisPartition"
+                          ng-model="Sequence.yaxis"
+                          ng-change="setSequenceYaxis">
+      subdivides the y axis variables into equal subsets
+      </div><div>
+      <input type="radio" name="sequence_type" value="mapPartition"
+                          ng-model="Sequence.map"
+                          ng-change="setSequenceMap">
+      map definition selects what shows up in frame k
+      </div>
+    </td></tr>
+    </table>
+  </div>
+
+  <!-- map definition -->
+
+  <div class="w3-col l4 w3-container"
+       ng-show="Xaxis.isMapIndex || Yaxis.isMapIndex">
+    <h4 style="padding-left:50px; margin-top:30px">Map variables</h4>
+    <table><tr><td valign="top">
+    <tr><td valign="top">
+      <i class="fa fa-square" aria-hidden="true"></i>
+    </td><td>
+      Python eval expression that returns mapped variable names:
+      <div>lambda i,j,k:
+      <input type="text" name="mapFunction" ng-model="Map.functionString"
+             style="width:300px; max-width:500px;
+                    overflow-y:scroll;">
+      </div>
+      <div ng-show="Map.functionString.length > 0">
+      <button type="link" class="action-link" ng-click="mapTest()">
+      Test</button> with
+      i=<input type="number" min="0" max="999" ng-model="Map.iIndex"
+                                               ng-change="mapTest()">,
+      j=<input type="number" min="0" max="999" ng-model="Map.jIndex"
+                                               ng-change="mapTest()">,
+      k=<input type="number" min="0" max="999" ng-model="Map.kIndex" 
+                                               ng-change="mapTest()">
+      <div>returns {{ Map.testResult }}</div>
+      </div>
+    </td></tr>
+    </table>
+  </div>
+</div>
+
+  <!-- payload summary -->
+
+<div class="w3-row">
+  <div class="w3-col l2 w3-container"><p></p></div>
+  <div class="w3-col l4 w3-container">
+    <h4 style="padding-left:50px; margin-top:30px">Database fetch payload</h4>
+    <table><tr><td valign="top">
+    <tr><td valign="top">
+      <i class="fa fa-square" aria-hidden="true"></i>
+    </td><td>
+      Total database rows: {{ totalTimeSamples() }}
+    </td></tr>
+    <tr><td valign="top">
+      <i class="fa fa-square" aria-hidden="true"></i>
+    </td><td>
+      Total database columns: {{ totalVariableCount() }}
+    </td></tr>
+    <tr><td valign="top">
+      <i class="fa fa-square" aria-hidden="true"></i>
+    </td><td>
+      Browser memory footprint:
+    </td></tr>
+    </table>
+  </div>
+
 </div>
 
 </form>
@@ -320,7 +627,7 @@
 <!-- Angular.js application code begins here -->
 
 
-<script>
+<script type="text/javascript">
 var app = angular.module('GlueXscalers', []);
 app.controller('scalersCtrl', function($scope, $http) {
     $http({ method : "GET", url : "?request=list_groups" }).then(
@@ -594,7 +901,7 @@ app.controller('scalersCtrl', function($scope, $http) {
                     $scope.Xaxis.names[evar.name] = evar.chan;
                     if (++addcount == 100) {
                         $scope.Xaxis.importTruncated = addcount;
-                        $scope.Xaxis.importSelection = true;
+                        $scope.Xaxis.importSelection = false;
                         return;
                     }
                 }
@@ -612,7 +919,7 @@ app.controller('scalersCtrl', function($scope, $http) {
             $scope.Xaxis.vars.push(evar);
             $scope.Xaxis.names[evar.name] = evar.chan;
         }
-        $scope.Xaxis.importSelection = false;
+        $scope.Xaxis.importSelection = ($scope.Xaxis.vars.length > 0);
     };
 
     $scope.importYselection = function() {
@@ -649,19 +956,21 @@ app.controller('scalersCtrl', function($scope, $http) {
             $scope.Yaxis.vars.push(evar);
             $scope.Yaxis.names[evar.name] = evar.chan;
         }
-        $scope.Yaxis.importSelection = false;
+        $scope.Yaxis.importSelection = ($scope.Yaxis.vars.length > 0);
     };
 
     $scope.clearXselection = function() {
         $scope.Xaxis.vars = [];
         $scope.Xaxis.names = {};
         $scope.Xaxis.clearSelection = false;
+        $scope.Xaxis.importSelection = false;
     };
 
     $scope.clearYselection = function() {
         $scope.Yaxis.vars = [];
         $scope.Yaxis.names = {};
         $scope.Yaxis.clearSelection = false;
+        $scope.Yaxis.importSelection = false;
     };
 
     $scope.editXselection = function(index, flag) {
@@ -672,6 +981,14 @@ app.controller('scalersCtrl', function($scope, $http) {
         $scope.Yaxis.vars[index].edit = flag
     };
 
+    $scope.raiseHelp = function(index) {
+        $scope.showHelp[index] = true;
+    };
+
+    $scope.clearHelp = function(index) {
+        $scope.showHelp[index] = false;
+    };
+
     $scope.deleteXselection = function(index) {
         var evar = $scope.Xaxis.vars.splice(index, 1);
         delete $scope.Xaxis.names[evar.name];
@@ -680,6 +997,33 @@ app.controller('scalersCtrl', function($scope, $http) {
     $scope.deleteYselection = function(index) {
         var evar = $scope.Yaxis.vars.splice(index, 1);
         delete $scope.Yaxis.names[evar.name];
+    };
+
+    $scope.mapTest = function() {
+        var req = "?request=test_mapping";
+        req += "&mapstring=" + encodeURIComponent($scope.Map.functionString);
+        req += "&i=" + encodeURIComponent($scope.Map.iIndex.toString());
+        req += "&j=" + encodeURIComponent($scope.Map.jIndex.toString());
+        req += "&k=" + encodeURIComponent($scope.Map.kIndex.toString());
+        $http({ method : "GET", url : req }).then(
+            function(response) {
+                $scope.Map.testResult = response.data;
+            },
+            function(response) {
+                $scope.Map.testResult = "SERVER ERROR"
+            });
+    };
+
+    $scope.setSequenceTime = function() {
+    };
+
+    $scope.setSequenceXaxis = function() {
+    };
+
+    $scope.setSequenceYaxis = function() {
+    };
+
+    $scope.setSequenceMap = function() {
     };
 
     $scope.EPICS = {};
@@ -703,6 +1047,25 @@ app.controller('scalersCtrl', function($scope, $http) {
     $scope.Yaxis = {};
     $scope.Yaxis.vars = [];
     $scope.Yaxis.names = {};
+
+    $scope.Xaxis.mapIndex0 = 0;
+    $scope.Xaxis.mapIndex1 = 1;
+    $scope.Yaxis.mapIndex0 = 0;
+    $scope.Yaxis.mapIndex1 = 1;
+    $scope.Xaxis.lowLimitAuto = true;
+    $scope.Xaxis.highLimitAuto = true;
+    $scope.Yaxis.lowLimitAuto = true;
+    $scope.Yaxis.highLimitAuto = true;
+
+    $scope.Map = {};
+    $scope.Map.iIndex = 0;
+    $scope.Map.jIndex = 0;
+    $scope.Map.kIndex = 0;
+
+    $scope.Sequence = {};
+    $scope.Sequence.length = 1;
+
+    $scope.showHelp = [0];
 });
 
 </script>
