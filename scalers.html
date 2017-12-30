@@ -25,7 +25,7 @@
   <div class="w3-col l2 w3-container"><p></p></div>
   <div class="w3-col l10 w3-container">
     <table style="display:inline-block; max-width:500px; vertical-align:top">
-      <tr><td>EPICS variables</td></tr>
+      <tr><td><h4 class="section-heading">EPICS variables:</h4></td></tr>
       <tr><td>Group:
         <select ng-model="EPICS.group" 
                 ng-change="EPICSgroupSelected()"
@@ -92,7 +92,7 @@
 <div class="w3-row">
   <div class="w3-col l2 w3-container"><p></p></div>
   <div class="w3-col l10 w3-container" style="margin-top:20px">
-    <h4>Time span selection: </h4>
+    <h4 class="section-heading">Time span selection: </h4>
     <table style="display:inline-block">
     <tr><td>from</td><td align="right">
       <button ng-click="setStartRunStart()">start</button>
@@ -152,15 +152,14 @@
   <!-- x axis -->
 
   <div class="w3-col l4 w3-container">
-    <h4 style="padding-left:50px; margin-top:20px">X axis specification</h4>
+    <h4 class="section-heading">X axis specification:</h4>
     <table><tr class="option-table-row"><td>
       <input type="checkbox" ng-model="Xaxis.isTime">
     </td><td>
       Select time (seconds) as the x coordinate for plotting.
     </td></tr>
 
-    <tr ng-show="!Xaxis.isTime" class="option-table-row">
-    <td>
+    <tr ng-show="!Xaxis.isTime" class="option-table-row"><td>
       <input type="checkbox" ng-model="Xaxis.importSelection"
                              ng-change="importXselection()">
     </td><td>
@@ -228,8 +227,7 @@
     </td></tr>
 
     <tr ng-show="!Xaxis.isTime && Xaxis.vars.length == 0"
-        class="option-table-row">
-    <td>
+        class="option-table-row"><td>
       <input type="checkbox" ng-model="Xaxis.isNamestring">
     </td><td class="modal-container">
       Generate variable names from
@@ -253,8 +251,7 @@
     </td></tr>
 
     <tr ng-show="!Xaxis.isTime && Xaxis.vars.length == 0"
-        class="option-table-row">
-    <td>
+        class="option-table-row"><td>
       <input type="checkbox" ng-model="Xaxis.isMapIndex">
     </td><td>
       X axis is a map index, 
@@ -284,8 +281,7 @@
       </div>
     </td></tr>
 
-    <tr class="option-table-row">
-    <td>
+    <tr class="option-table-row"><td>
       <i class="fa fa-square" aria-hidden="true"></i>
     </td><td>
       Axis limits 
@@ -299,8 +295,7 @@
       </span>
     </td></tr>
 
-    <tr ng-show="!Xaxis.isTime" class="option-table-row">
-    <td>
+    <tr ng-show="!Xaxis.isTime" class="option-table-row"><td>
       <i class="fa fa-square" aria-hidden="true"></i>
     </td><td>
       Plotted values are: 
@@ -319,8 +314,7 @@
       </div>
     </td></tr>
 
-    <tr ng-show="!Xaxis.isTime" class="option-table-row">
-    <td>
+    <tr ng-show="!Xaxis.isTime" class="option-table-row"><td>
       <i class="fa fa-square" aria-hidden="true"></i>
     </td><td>
       How to interpolate between measurements:
@@ -340,22 +334,20 @@
   <!-- y axis -->
 
   <div class="w3-col l4 w3-container">
-    <h4 style="padding-left:50px; margin-top:20px">Y axis specification</h4>
+    <h4 class="section-heading">Y axis specification:</h4>
     <table><tr class="option-table-row"><td>
       <input type="checkbox" ng-model="Yaxis.isRate">
     </td><td>
       Select rate (Hz) as the y coordinate for plotting.
     </td></tr>
 
-    <tr ng-show="!Yaxis.isRate" class="option-table-row">
-    <td>
+    <tr ng-show="!Yaxis.isRate" class="option-table-row"><td>
       <input type="checkbox" ng-model="Yaxis.isFreq">
     </td><td>
       Select frequency (samples) as the y coordinate for plotting.
     </td></tr>
 
-    <tr ng-show="!Yaxis.isFreq && !Yaxis.isRate" class="option-table-row">
-    <td>
+    <tr ng-show="!Yaxis.isFreq && !Yaxis.isRate" class="option-table-row"><td>
       <input type="checkbox" ng-model="Yaxis.importSelection"
                              ng-change="importYselection()">
     </td><td>
@@ -427,8 +419,7 @@
     </tr>
 
     <tr ng-show="!Yaxis.isRate && !Yaxis.isFreq && Yaxis.vars.length == 0"
-        class="option-table-row">
-    <td>
+        class="option-table-row"><td>
       <input type="checkbox" ng-model="Yaxis.isNamestring">
     </td><td class="modal-container">
       Generate variable names from
@@ -452,8 +443,7 @@
     </td></tr>
 
     <tr ng-show="Xaxis.vars.length == 0 && Yaxis.vars.length == 0 &&
-                 !Yaxis.isRate && !Yaxis.isFreq" class="option-table-row">
-      <td>
+                 !Yaxis.isRate && !Yaxis.isFreq" class="option-table-row"><td>
         <input type="checkbox" ng-model="Yaxis.isMapIndex">
       </td><td>
         Y axis is a map index, 
@@ -501,8 +491,7 @@
       </td>
     </tr>
 
-    <tr ng-show="!Yaxis.isRate && !Yaxis.isFreq" class="option-table-row">
-    <td>
+    <tr ng-show="!Yaxis.isRate && !Yaxis.isFreq" class="option-table-row"><td>
       <i class="fa fa-square" aria-hidden="true"></i>
     </td><td>
       Plotted values are: 
@@ -521,8 +510,7 @@
       </div>
     </td></tr>
 
-    <tr ng-show="!Yaxis.isRate && !Yaxis.isFreq" class="option-table-row">
-    <td>
+    <tr ng-show="!Yaxis.isRate && !Yaxis.isFreq" class="option-table-row"><td>
       <i class="fa fa-square" aria-hidden="true"></i>
     </td><td>
       How to interpolate between measurements:
@@ -550,20 +538,20 @@
   <!-- Sequence definition -->
 
   <div class="w3-col l4 w3-container">
-    <h4 style="padding-left:50px; margin-top:20px">Sequence definition</h4>
+    <h4 class="section-heading">Sequence definition:</h4>
     <table>
     <tr class="option-table-row"><td>
       <i class="fa fa-square" aria-hidden="true"></i>
     </td><td>
-      <div>
       Plot the above data in a sequence of 
       <input type="number" min="0" max="999" step="1" ng-model="Sequence.length">
-      frames,</div>
-      <div>designated by frame index k in range(0,{{ Sequence.length }})</div>
+      frames,
+      <span style="display:inline-block">
+      designated by frame index k in range(0,{{ Sequence.length }})
+      </span>
     </td></tr>
 
-    <tr ng-show="Sequence.length > 1" class="option-table-row">
-    <td>
+    <tr ng-show="Sequence.length > 1" class="option-table-row"><td>
       <i class="fa fa-square" aria-hidden="true"></i>
     </td><td>
       The frame sequence:
@@ -596,7 +584,7 @@
 
   <div class="w3-col l4 w3-container"
        ng-show="Xaxis.isMapIndex || Yaxis.isMapIndex">
-    <h4 style="padding-left:50px; margin-top:20px">Map variables</h4>
+    <h4 class="section-heading">Map variables:</h4>
     <table>
     <tr class="option-table-row"><td>
       <i class="fa fa-square" aria-hidden="true"></i>

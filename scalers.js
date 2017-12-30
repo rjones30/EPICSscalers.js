@@ -1,225 +1,334 @@
+// 
+// scalers.js - a node.js server for the EPICSscalers.js web client
+//
+// author: richard.t.jones at uconn.edu
+// version: december 26, 2017
+//
+
+const url = require('url');
 const http = require('http');
 const mysql = require('mysql');
-const url = require('url');
-const fs = require('fs');
-
+const fs = require('fs-extra');
 const child_process = require('child_process');
-const pyshell = child_process.spawn('./pyshell.py');
-pyshell.stdout.on('data', pyshell_output);
-pyshell.stdout.on('error', pyshell_fault);
-pyshell.stdout.on('close', pyshell_close);
-pyshell.stderr.on('data', pyshell_error);
-pyshell.stderr.on('error', pyshell_fault);
-pyshell.stderr.on('close', pyshell_close);
+
+// create a connection pool to the mya backend servers
+
+var mya_pool = [];
+for (var i=0; i < 10; ++i) {
+    var pool = mysql.createPool({ connectionLimit: 10, //important
+                                  host: 'gluey.phys.uconn.edu',
+                                  port: 63306 + i,
+                                  user: "myapi",
+                                  password: "MYA",
+                                  database: "archive"});
+    mya_pool.push(pool);
+}
+
+// create a connection pool to the rcdb server
+
+var rcdb_pool = mysql.createPool({ connectionLimit: 10, //important
+                                   host: "hallddb.jlab.org",
+                                   port: 3306,
+                                   user: "rcdb",
+                                   database: "rcdb"});
+
+// spawn a python shell to interpret python expressions
+
+var pyshell = child_process.spawn('./pyshell.py');
+pyshell.stdout.on('data', pyshell_output_listener);
+pyshell.stdout.on('error', pyshell_fault_listener);
+pyshell.stdout.on('close', pyshell_close_listener);
+pyshell.stderr.on('data', pyshell_error_listener);
+pyshell.stderr.on('error', pyshell_fault_listener);
+pyshell.stderr.on('close', pyshell_close_listener);
 var pyshell_queue = [];
 
-function pyshell_query(message, callback) {
-  pyshell_queue.push({message: message, callback: callback});
-  if (pyshell_queue.length == 1) {
-    pyshell.stdin.write(message + '\n');
-  }
+function pyshell_query(message) {
+    // Send message to the python shell as a command, and return
+    // a promise for the response. All communication with the
+    // python shell should take place through this function
+    // properly manage the serialization.
+
+    return Promise(function(resolve, reject) {
+        pyshell_queue.push({message: message,
+                            response: "",
+                            resolve: resolve,
+                            reject: reject});
+        if (pyshell_queue.length == 1) {
+            pyshell.stdin.write(message + '\n');
+        }
+    });
 }
 
 function pyshell_output(data) {
-  if (pyshell_queue.length == 0) {
-    console.log("unexpected message from pyshell: " + data);
-    return;
-  }
-  var req = pyshell_queue.shift();
-  req.callback(200, data, 'plain');
-  if (pyshell_queue.length > 0) {
-    pyshell.stdin.write(pyshell_queue[0].message + '\n');
-  }
+    // Event listener for stdout responses from the python shell,
+    // passes the response to the first resolve in the queue.
+    // Responses are left open until reception of a nl termination
+    // character. When a response terminates the original promise
+    // is resolved and the next message in the queue is sent, if any.
+ 
+    if (pyshell_queue.length == 0) {
+        console.log("unexpected message from pyshell: " + data);
+        return;
+    }
+    pyshell_queue[0].response += data;
+    if (data.endsWith('\n')) {
+        pyshell_queue[0].resolve(pyshell_queue[0].response);
+        pyshell_queue.shift();
+        if (pyshell_queue.length > 0) {
+            pyshell.stdin.write(pyshell_queue[0].message + '\n');
+        }
+    }
 }
 
 function pyshell_error(data) {
-  if (pyshell_queue.length == 0) {
-    console.log("unexpected error from pyshell: " + data);
-    return;
-  }
-  var req = pyshell_queue.shift();
-  req.callback(200, 'PYTHON ERROR: ' + data, 'plain');
-  if (pyshell_queue.length > 0) {
-    pyshell.stdin.write(pyshell_queue[0].message);
-  }
+    // Event listener for stderr responses from the python shell,
+    // passes the response to the first resolve in the queue.
+    // Responses are left open until reception of a nl termination
+    // character. When a response terminates the original promise
+    // is resolved and the next message in the queue is sent, if any.
+
+    if (pyshell_queue.length == 0) {
+        console.log("unexpected message from pyshell: " + data);
+        return;
+    }
+    pyshell_queue[0].response += data;
+    if (data.endsWith('\n')) {
+        pyshell_queue[0].reject(pyshell_queue[0].response);
+        pyshell_queue.shift();
+        if (pyshell_queue.length > 0) {
+            pyshell.stdin.write(pyshell_queue[0].message + '\n');
+        }
+    }
 }
 
 function pyshell_fault(data) {
-  console.log('pyshell_fault!');
+    // Event listener for communications faults with the python shell,
+    // hangs the connection. Best to let the system crash and do a
+    // most-mortem than try to recover automatically and let a bad
+    // client overwhelm us.
+
+    console.log("unexpected fault from pyshell: " + data);
 }
 
 function pyshell_close(data) {
-  console.log('pyshell_close!');
+    // Event listener for communications faults with the python shell,
+    // hangs the connection. Best to let the system crash and do a
+    // most-mortem than try to recover automatically and let a bad
+    // client overwhelm us.
+
+    console.log("unexpected close from pyshell: " + data);
 }
 
-function do_display_webform(callback) {
-  fs.readFile('scalers.html', 'utf8', function(err, contents) {
-    callback(200, contents, 'html');
-  });
-};
+function do_groups_list(req_obj) {
+    // Query EPICS the database for a list of all groups found.
+    // If there is a connection error or some problem fetching 
+    // results, report that as a http error but resolve the
+    // promise, do not fail over to reject.
 
-function do_return_file(pathname, callback) {
-  var js = pathname.match(/^\/(.*\.js)$/);
-  var css = pathname.match(/^\/(.*\.css)$/);
-  var ico = pathname.match(/^\/(.*\.ico)$/);
-  if (js) {
-    fs.readFile(js[1], 'utf8', function(err, contents) {
-      callback(200, contents, 'javascript');
+    return new Promise(function(resolve, reject) {
+        mya_pool[0].getConnection(function(err, con) {
+            if (err) {
+                resolve({code: 500, content: err.message, type: 'plain'});
+                return;
+            }   
+            sql = "select group_id, name from groups" +
+                  " where name like 'HD_%' or name = 'bpm'" +
+                  " or name like 'HallD%' or name = 'utilityMeters';"
+            con.query(sql, function(err, result, fields) {
+                con.release();
+                if (err) {
+                    resolve({code: 500, content: err.message, type: 'plain'});
+                    return;
+                }   
+                var json = "{";
+                for (var i in result) {
+                    if (i > 0)
+                        json += ',';
+                    json += '"' + result[i]['name'] + '"';
+                    json += ':' + result[i]['group_id'];
+                }
+                json += "}";
+                resolve({code: 200, content: json, type: 'json'});
+            });
+        });
     });
-  }
-  else if (css) {
-    fs.readFile(css[1], 'utf8', function(err, contents) {
-      callback(200, contents, 'css');
-    });
-  }
-  else if (ico) {
-    fs.readFile(ico[1], 'utf8', function(err, contents) {
-      callback(200, contents, 'ico');
-    });
-  }
-  else {
-    console.log("unexpected request received for file " + pathname);
-  }
-};
-
-function do_list_groups(callback) {
-  var con = mysql.createConnection({
-    host: "gluey.phys.uconn.edu",
-    port: 63306,
-    user: "myapi",
-    password: "MYA",
-    database: "archive"
-  });
-  con.connect();
-  sql = "select group_id, name from groups" +
-        " where name like 'HD_%' or name = 'bpm'" +
-        " or name like 'HallD%' or name = 'utilityMeters';"
-  con.query(sql, function (err, result, fields) {
-    if (err)
-      return callback(500, err.message, 'plain');
-    listing = "{";
-    for (var i in result) {
-      if (i > 0)
-        listing += ', ';
-      listing += '"' + result[i]['name'] + '"';
-      listing += ':' + result[i]['group_id'];
-    }
-    listing += "}";
-    callback(200, listing, 'json');
-    con.end();
-  });
 }
 
-function do_list_channels(group, callback) {
-  var con = mysql.createConnection({
-    host: "gluey.phys.uconn.edu",
-    port: 63306,
-    user: "myapi",
-    password: "MYA",
-    database: "archive"
-  });
-  con.connect();
-  sql = "select members.chan_id, name, type, size, host" +
-        " from members join channels" +
-        " on members.chan_id = channels.chan_id" +
-        " where members.group_id = " + group.toString() +
-        " order by members.chan_id;";
-  con.query(sql, function (err, result, fields) {
-    if (err)
-      return callback(500, err.message, 'plain');
-    listing = "["
-    for (var i in result) {
-      if (i == 0)
-        listing += '{';
-      else
-        listing += ', {';
-      listing += '"name":"' + result[i]['name'] + '",';
-      listing += '"type":' + result[i]['type'] + ',';
-      listing += '"size":' + result[i]['size'] + ',';
-      listing += '"host":"' + result[i]['host'] + '",';
-      listing += '"chan":"' + result[i]['chan_id'] + '"}';
-    }
-    listing += "]";
-    callback(200, listing, 'json');
-    con.end();
-  });
+function do_channels_group(req_obj) {
+    // Query the EPICS database for a list of all variables
+    // belonging to the specified group encoded in the url.
+    // If there is a connection error or some problem fetching 
+    // results, report that as a http error but resolve the
+    // promise, do not fail over to reject.
+
+    return new Promise(function(resolve, reject) {
+        mya_pool[0].getConnection(function(err, con) {
+            if (err) {
+                resolve({code: 500, content: err.message, type: 'plain'});
+                return;
+            }   
+            sql = "select members.chan_id, name, type, size, host" +
+                  " from members join channels" +
+                  " on members.chan_id = channels.chan_id" +
+                  " where members.group_id = " + 
+                  req_obj.query.group.toString() +
+                  " order by members.chan_id;";
+            con.query(sql, function(err, result, fields) {
+                con.release();
+                if (err) {
+                    resolve({code: 500, content: err.message, type: 'plain'});
+                    return;
+                }   
+                var json = "[";
+                for (var i in result) {
+                    if (i > 0)
+                        json += ',{';
+                    else
+                        json += '{';
+                    json += '"name":"' + result[i]['name'] + '",';
+                    json += '"type":' + result[i]['type'] + ',';
+                    json += '"size":' + result[i]['size'] + ',';
+                    json += '"host":"' + result[i]['host'] + '",';
+                    json += '"chan":"' + result[i]['chan_id'] + '"}';
+                }
+                json += "]";
+                resolve({code: 200, content: json, type: 'json'});
+            });
+        });
+    });
 }
 
 function do_run_times(run, callback) {
-  var con = mysql.createConnection({
-    host: "hallddb.jlab.org",
-    port: 3306,
-    user: "rcdb",
-    database: "rcdb"
-  });
-  con.connect();
-  sql = "select number as run," +
-        " UNIX_TIMESTAMP(started) as started," +
-        " UNIX_TIMESTAMP(finished) as finished" +
-        " from runs where number <= " + run.toString() +
-        " order by number desc limit 1;";
-  con.query(sql, function (err, result, fields) {
-    if (err || result.length == 0) {
-      console.log("bad rcdb query: " + err.message);
-      return callback(500, err.message, 'plain');
-    }
-    listing = '{"run":' + result[0]['run'] + 
-              ',"starttime":' + result[0]['started'] + 
-              ',"endtime":' + result[0]['finished'] +
-              '}';
-    callback(200, listing, 'json');
-    con.end();
-  });
+    // Query the GlueX rcdb database for the start and end times
+    // for a particular run. If there is a connection error or
+    // some problem fetching results, report that as a http error
+    // but resolve the promise, do not fail over to reject.
+
+    return new Promise(function(resolve, reject) {
+        rcdb_pool[0].getConnection(function(err, con) {
+            if (err) {
+                resolve({code: 500, content: err.message, type: 'plain'});
+                return;
+            }   
+            sql = "select number as run," +
+                  " UNIX_TIMESTAMP(started) as started," +
+                  " UNIX_TIMESTAMP(finished) as finished" +
+                  " from runs where number <= " + 
+                  req_obj.query.run.toString() +
+                  " order by number desc limit 1;";
+            con.query(sql, function(err, result, fields) {
+                con.release();
+                if (err || result.length==0) {
+                    console.log("bad rcdb query: " + err.message);
+                    resolve({code: 500, content: err.message, type: 'plain'});
+                    return;
+                }   
+                var json = '{"run":' + result[0]['run'] + 
+                           ',"starttime":' + result[0]['started'] + 
+                           ',"endtime":' + result[0]['finished'] +
+                           '}';
+                resolve({code: 200, content: json, type: 'json'});
+            });
+        });
+    });
 }
 
-function do_test_mapstring(query, callback) {
-  const i = (query.i)? query.i.toString() : '0';
-  const j = (query.j)? query.j.toString() : '0';
-  const k = (query.k)? query.k.toString() : '0';
-  const line = '(lambda i,j,k:' + query.mapstring + ')' +
-               '(' + i + ',' + j + ',' + k + ')';
-  pyshell_query(line, callback);
+function do_test_mapstring(req_obj) {
+    // Pass the test mapstring to the pyshell and return the result.
+
+    const i = (req_obj.query.i)? req_obj.query.i.toString() : '0';
+    const j = (req_obj.query.j)? req_obj.query.j.toString() : '0';
+    const k = (req_obj.query.k)? req_obj.query.k.toString() : '0';
+    const line = '(lambda i,j,k:' + req_obj.query.mapstring + ')' +
+                 '(' + i + ',' + j + ',' + k + ')';
+    return pyshell_query(line).then(function(result) {
+        return {code: 200, content: result, type: 'plain'};
+    }, function(err) {
+        return {code: 200, content: err, type: 'plain'};
+    });
 }
 
 function do_eval_mapstring(query, callback) {
-  const i0 = (query.i0)? query.i0.toString() : '0';
-  const i1 = (query.i1)? query.i1.toString() : '1';
-  const j0 = (query.j0)? query.j0.toString() : '0';
-  const j1 = (query.j1)? query.j1.toString() : '1';
-  const k0 = (query.k0)? query.k0.toString() : '0';
-  const k1 = (query.k1)? query.k1.toString() : '1';
-  const line = '(lambda i,j,k:' + query.mapstring + ')' +
-               '(' + i0 + ',' + j0 + ',' + k0 + ')';
-  callback(200, '{"vars":[{"testvar":10}],"table":[]}', 'json');
+    // Pass the eval mapstring to the pyshell and return the result.
+ 
+    const i0 = (req_obj.query.i0)? req_obj.query.i0.toString() : '0';
+    const i1 = (req_obj.query.i1)? req_obj.query.i1.toString() : '1';
+    const j0 = (req_obj.query.j0)? req_obj.query.j0.toString() : '0';
+    const j1 = (req_obj.query.j1)? req_obj.query.j1.toString() : '1';
+    const k0 = (req_obj.query.k0)? req_obj.query.k0.toString() : '0';
+    const k1 = (req_obj.query.k1)? req_obj.query.k1.toString() : '1';
+    const line = '(lambda i,j,k:' + req_obj.query.mapstring + ')' +
+                 '(' + i0 + ',' + j0 + ',' + k0 + ')';
+    return Promise.resolve('{"vars":[{"testvar":10}],"table":[]}', 'json');
 }
 
 http.createServer(function (req, res) {
-  var return_result = function(code, message, type) {
-    res.writeHead(code, {'Content-Type': 'text/' + type});
-    res.end(message);
-    console.log("sent message in format " + type + 
-                " length " + message.length.toString())
-  };
-  var response = url.parse(req.url, true);
-  var pathname = response.pathname;
-  var query = response.query;
-  if (query.request) {
-    if (query.request == "list_groups")
-      do_list_groups(return_result);
-    else if (query.request == "list_channels")
-      do_list_channels(query.group, return_result);
-    else if (query.request == "run_times")
-      do_run_times(query.run, return_result);
-    else if (query.request == "test_mapping")
-      do_test_mapstring(query, return_result);
-    else if (query.request == "eval_mapping")
-      do_eval_mapstring(query, return_result);
-    else
-      return_result(400, "400 Bad Request", "plain");
-  }
-  else if (pathname.length > 1) {
-    do_return_file(pathname, return_result);
-  }
-  else
-    do_display_webform(return_result);
+    // This is the main web server event listener.
+    // The query is available in req, and res is
+    // the handle through which a response is sent.
+
+    var send_response = function(result) {
+        res.writeHead(result.code, {'Content-Type': 'text/' + result.type});
+        res.end(result.content);
+        console.log("sent response in format " + result.type + 
+                    " length " + result.content.length.toString())
+    };
+
+    var req_obj = url.parse(req.url, true);
+    if (req_obj.query.request) {
+        if (req_obj.query.request == "list_groups")
+            do_groups_list(req_obj).then(send_response);
+        else if (req_obj.query.request == "list_channels")
+            do_channels_group(req_obj).then(send_response);
+        else if (req_obj.query.request == "run_times")
+            do_run_times(req_obj).then(send_response);
+        else if (req_obj.query.request == "test_mapping")
+            do_test_mapstring(req_obj).then(send_response);
+        else if (req_obj.query.request == "eval_mapping")
+            do_eval_mapstring(req_obj).then(send_response);
+        else
+            send_response(400, "400 Bad Request", "plain");
+    }
+    else if (req_obj.pathname.length > 1) {
+        var code;
+        var type;
+        var content;
+        var js = req_obj.pathname.match(/^\/(.*\.js)$/);
+        var css = req_obj.pathname.match(/^\/(.*\.css)$/);
+        var ico = req_obj.pathname.match(/^\/(.*\.ico)$/);
+        if (js) {
+            code = 200;
+            type = 'javascript';
+            content = fs.readFile(js[1], 'utf8');
+        }
+        else if (css) {
+            code = 200;
+            type = 'css';
+            content = fs.readFile(css[1], 'utf8');
+        }
+        else if (ico) {
+            code = 200;
+            type = 'ico';
+            content = fs.readFile(ico[1], 'utf8');
+        }
+        else {
+            code = 404;
+            type = 'plain';
+            content = Promise.resolve("Unsupported filetype");
+            console.log("unexpected request received for file " +
+                        req_obj.pathname);
+        }
+        content.then(function(text) {
+            send_response({code: code, content: text, type: type});
+        }, function(err) {
+            send_response({code: 404, content: err, type: 'plain'});
+        });
+    }
+    else {
+        fs.readFile('scalers.html', 'utf8').then(function(text) {
+            send_response({code: 200, content: text, type: 'html'});
+        });
+    }
+
 }).listen(8080);

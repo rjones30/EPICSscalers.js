@@ -75,3 +75,7 @@ i.fa-square {
     vertical-align: top;
     border-top: 8px solid transparent;
 }
+
+.section-heading {
+    margin-top: 15px;
+}
