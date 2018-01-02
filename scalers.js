@@ -5,10 +5,11 @@
 // version: december 26, 2017
 //
 
+const fs = require('fs');
 const url = require('url');
 const http = require('http');
 const mysql = require('mysql');
-const fs = require('fs-extra');
+const Promise = require('es6-promise').Promise;
 const child_process = require('child_process');
 
 // create a connection pool to the mya backend servers
@@ -49,7 +50,7 @@ function pyshell_query(message) {
     // python shell should take place through this function
     // properly manage the serialization.
 
-    return Promise(function(resolve, reject) {
+    return new Promise(function(resolve, reject) {
         pyshell_queue.push({message: message,
                             response: "",
                             resolve: resolve,
@@ -60,7 +61,7 @@ function pyshell_query(message) {
     });
 }
 
-function pyshell_output(data) {
+function pyshell_output_listener(data) {
     // Event listener for stdout responses from the python shell,
     // passes the response to the first resolve in the queue.
     // Responses are left open until reception of a nl termination
@@ -72,7 +73,7 @@ function pyshell_output(data) {
         return;
     }
     pyshell_queue[0].response += data;
-    if (data.endsWith('\n')) {
+    if (data[data.length - 1] == 0x0a) {
         pyshell_queue[0].resolve(pyshell_queue[0].response);
         pyshell_queue.shift();
         if (pyshell_queue.length > 0) {
@@ -81,7 +82,7 @@ function pyshell_output(data) {
     }
 }
 
-function pyshell_error(data) {
+function pyshell_error_listener(data) {
     // Event listener for stderr responses from the python shell,
     // passes the response to the first resolve in the queue.
     // Responses are left open until reception of a nl termination
@@ -93,7 +94,7 @@ function pyshell_error(data) {
         return;
     }
     pyshell_queue[0].response += data;
-    if (data.endsWith('\n')) {
+    if (data[data.length - 1] == 0x0a) {
         pyshell_queue[0].reject(pyshell_queue[0].response);
         pyshell_queue.shift();
         if (pyshell_queue.length > 0) {
@@ -102,7 +103,7 @@ function pyshell_error(data) {
     }
 }
 
-function pyshell_fault(data) {
+function pyshell_fault_listener(data) {
     // Event listener for communications faults with the python shell,
     // hangs the connection. Best to let the system crash and do a
     // most-mortem than try to recover automatically and let a bad
@@ -111,7 +112,7 @@ function pyshell_fault(data) {
     console.log("unexpected fault from pyshell: " + data);
 }
 
-function pyshell_close(data) {
+function pyshell_close_listener(data) {
     // Event listener for communications faults with the python shell,
     // hangs the connection. Best to let the system crash and do a
     // most-mortem than try to recover automatically and let a bad
@@ -199,14 +200,14 @@ function do_channels_group(req_obj) {
     });
 }
 
-function do_run_times(run, callback) {
+function do_run_times(req_obj) {
     // Query the GlueX rcdb database for the start and end times
     // for a particular run. If there is a connection error or
     // some problem fetching results, report that as a http error
     // but resolve the promise, do not fail over to reject.
 
     return new Promise(function(resolve, reject) {
-        rcdb_pool[0].getConnection(function(err, con) {
+        rcdb_pool.getConnection(function(err, con) {
             if (err) {
                 resolve({code: 500, content: err.message, type: 'plain'});
                 return;
@@ -240,27 +241,77 @@ function do_test_mapstring(req_obj) {
     const i = (req_obj.query.i)? req_obj.query.i.toString() : '0';
     const j = (req_obj.query.j)? req_obj.query.j.toString() : '0';
     const k = (req_obj.query.k)? req_obj.query.k.toString() : '0';
-    const line = '(lambda i,j,k:' + req_obj.query.mapstring + ')' +
-                 '(' + i + ',' + j + ',' + k + ')';
-    return pyshell_query(line).then(function(result) {
-        return {code: 200, content: result, type: 'plain'};
+    var mapstring = req_obj.query.mapstring;
+    var expr = '(lambda i,j,k:' + mapstring + ')' +
+               '(' + i + ',' + j + ',' + k + ')';
+    return pyshell_query(expr).then(function(result) {
+        return {code: 200, content: result, type: 'json'};
     }, function(err) {
-        return {code: 200, content: err, type: 'plain'};
+        return {code: 500, content: err, type: 'plain'};
     });
 }
 
-function do_eval_mapstring(query, callback) {
+function do_eval_namestring(req_obj) {
+    // Pass the namestring to the pyshell and return the result.
+ 
+    const i0 = (req_obj.query.i0)? req_obj.query.i0.toString() : '0';
+    const i1 = (req_obj.query.i1)? req_obj.query.i1.toString() : '0';
+    const j0 = (req_obj.query.j0)? req_obj.query.j0.toString() : '0';
+    const j1 = (req_obj.query.j1)? req_obj.query.j1.toString() : '0';
+    const k0 = (req_obj.query.k0)? req_obj.query.k0.toString() : '0';
+    const k1 = (req_obj.query.k1)? req_obj.query.k1.toString() : '0';
+    var namestring = req_obj.query.namestring.replace(/"/g, '\\"')
+                                             .replace(/'/g, "\\'");
+    var prog;
+    if (i1 > i0)
+        prog = 'iterate("lambda i:' + namestring + '",' +
+               '[' + i0 + '], [' + i1 + '])';
+    else if (j1 > j0)
+        prog = 'iterate("lambda j:' + namestring + '",' +
+               '[' + j0 + '], [' + j1 + '])';
+    else if (k1 > k0)
+        prog = 'iterate("lambda k:' + namestring + '",' +
+               '[' + k0 + '], [' + k1 + '])';
+    return pyshell_query(prog).then(function(result) {
+        return {code: 200, content: result, type: 'json'};
+    }, function(err) {
+        return {code: 500, content: err, type: 'plain'};
+    });
+}
+
+function do_eval_mapstring(req_obj) {
     // Pass the eval mapstring to the pyshell and return the result.
  
     const i0 = (req_obj.query.i0)? req_obj.query.i0.toString() : '0';
-    const i1 = (req_obj.query.i1)? req_obj.query.i1.toString() : '1';
+    const i1 = (req_obj.query.i1)? req_obj.query.i1.toString() : '0';
     const j0 = (req_obj.query.j0)? req_obj.query.j0.toString() : '0';
-    const j1 = (req_obj.query.j1)? req_obj.query.j1.toString() : '1';
+    const j1 = (req_obj.query.j1)? req_obj.query.j1.toString() : '0';
     const k0 = (req_obj.query.k0)? req_obj.query.k0.toString() : '0';
-    const k1 = (req_obj.query.k1)? req_obj.query.k1.toString() : '1';
-    const line = '(lambda i,j,k:' + req_obj.query.mapstring + ')' +
-                 '(' + i0 + ',' + j0 + ',' + k0 + ')';
-    return Promise.resolve('{"vars":[{"testvar":10}],"table":[]}', 'json');
+    const k1 = (req_obj.query.k1)? req_obj.query.k1.toString() : '0';
+    var mapstring = req_obj.query.mapstring.replace(/"/g, '\\"')
+                                           .replace(/'/g, "\\'");
+    var prog = 'iterate("lambda i,j,k:' + mapstring + '",' +
+               '[' + i0 + ',' + j0 + ',' + k0 + '],' +
+               '[' + i1 + ',' + j1 + ',' + k1 + '])';
+    return pyshell_query(prog).then(function(result) {
+        return {code: 200, content: result, type: 'json'};
+    }, function(err) {
+        return {code: 500, content: err, type: 'plain'};
+    });
+}
+
+function readFile(filepath, encoding) {
+    // Wrap fs.readFile to make it return a promise.
+
+    return new Promise(function(resolve, reject) {
+        fs.readFile(filepath, encoding, function(err, data) {
+            if (err) {
+                reject(err);
+                return;
+            }
+            resolve(data);
+        });
+    });
 }
 
 http.createServer(function (req, res) {
@@ -285,6 +336,8 @@ http.createServer(function (req, res) {
             do_run_times(req_obj).then(send_response);
         else if (req_obj.query.request == "test_mapping")
             do_test_mapstring(req_obj).then(send_response);
+        else if (req_obj.query.request == "eval_names")
+            do_eval_namestring(req_obj).then(send_response);
         else if (req_obj.query.request == "eval_mapping")
             do_eval_mapstring(req_obj).then(send_response);
         else
@@ -300,17 +353,17 @@ http.createServer(function (req, res) {
         if (js) {
             code = 200;
             type = 'javascript';
-            content = fs.readFile(js[1], 'utf8');
+            content = readFile(js[1], 'utf8');
         }
         else if (css) {
             code = 200;
             type = 'css';
-            content = fs.readFile(css[1], 'utf8');
+            content = readFile(css[1], 'utf8');
         }
         else if (ico) {
             code = 200;
             type = 'ico';
-            content = fs.readFile(ico[1], 'utf8');
+            content = readFile(ico[1], 'utf8');
         }
         else {
             code = 404;
@@ -326,7 +379,7 @@ http.createServer(function (req, res) {
         });
     }
     else {
-        fs.readFile('scalers.html', 'utf8').then(function(text) {
+        readFile('scalers.html', 'utf8').then(function(text) {
             send_response({code: 200, content: text, type: 'html'});
         });
     }

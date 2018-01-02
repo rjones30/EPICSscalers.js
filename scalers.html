@@ -23,7 +23,7 @@
 
 <div class="w3-row">
   <div class="w3-col l2 w3-container"><p></p></div>
-  <div class="w3-col l10 w3-container">
+  <div class="w3-col l4 w3-container">
     <table style="display:inline-block; max-width:500px; vertical-align:top">
       <tr><td><h4 class="section-heading">EPICS variables:</h4></td></tr>
       <tr><td>Group:
@@ -47,6 +47,8 @@
         </button>
       </td></tr>
     </table>
+  </div>
+  <div class="w3-col l6 w3-container">
     <table style="display:inline-block; max-width:500px vertical-align:top"
            class="underline-headers" ng-show="EPICS.group != EPICS.nogroup">
       <tr>
@@ -228,7 +230,8 @@
 
     <tr ng-show="!Xaxis.isTime && Xaxis.vars.length == 0"
         class="option-table-row"><td>
-      <input type="checkbox" ng-model="Xaxis.isNamestring">
+      <input type="checkbox" ng-model="Xaxis.isNamestring"
+                             ng-change="setXaxisNamestring()">
     </td><td class="modal-container">
       Generate variable names from
       <button type="link" class="action-link" 
@@ -244,20 +247,25 @@
         </button>
       </div>
       <span style="display:inline-block">
-      <input type="text" ng-model="Xaxis.nameString"> for
+      <input type="text" ng-model="Xaxis.namestring"> for
       i in range(0,<input type="number" min="1" max="500" step="1"
-                                        ng-model="Xaxis.nameCount">)
+                                        ng-model="Xaxis.nameCount"
+                                        ng-change="setState('preload')">)
       </span>
     </td></tr>
 
-    <tr ng-show="!Xaxis.isTime && Xaxis.vars.length == 0"
+    <tr ng-show="!Xaxis.isTime && Xaxis.vars.length == 0 && !Xaxis.isNamestring"
         class="option-table-row"><td>
-      <input type="checkbox" ng-model="Xaxis.isMapIndex">
+      <input type="checkbox" ng-model="Xaxis.isMapIndex"
+                             ng-change="setXaxisMapIndex()">
     </td><td>
       X axis is a map index, 
-      i=range(<input type="number" min="0" max="500" ng-model="Xaxis.mapIndex0">,
+      i=range(<input type="number" min="0" max="500"
+                                   ng-model="Xaxis.mapIndex0"
+                                   ng-change="setXaxisMapIndex()">,
       <input type="number" min="{{Xaxis.mapIndex0 + 1}}" max="500"
-                           ng-model="Xaxis.mapIndex1">)
+                           ng-model="Xaxis.mapIndex1"
+                           ng-change="setXaxisMapIndex()">)
       <div class="modal-container">
       with title
       <button type="link" class="action-link" ng-click="showModal[0] = true">
@@ -420,7 +428,8 @@
 
     <tr ng-show="!Yaxis.isRate && !Yaxis.isFreq && Yaxis.vars.length == 0"
         class="option-table-row"><td>
-      <input type="checkbox" ng-model="Yaxis.isNamestring">
+      <input type="checkbox" ng-model="Yaxis.isNamestring"
+                             ng-change="setYaxisNamestring()">
     </td><td class="modal-container">
       Generate variable names from
       <button type="link" class="action-link"
@@ -436,21 +445,26 @@
         </button>
       </div>
       <span style="display:inline-block">
-      <input type="text" ng-model="Yaxis.varString"> for
+      <input type="text" ng-model="Yaxis.namestring"> for
       j in range(0,<input type="number" min="1" max="500" step="1"
-                                        ng-model="Yaxis.nameCount">)
+                                        ng-model="Yaxis.nameCount"
+                                        ng-change="setState('preload')">)
       </span>
     </td></tr>
 
     <tr ng-show="Xaxis.vars.length == 0 && Yaxis.vars.length == 0 &&
-                 !Yaxis.isRate && !Yaxis.isFreq" class="option-table-row"><td>
-        <input type="checkbox" ng-model="Yaxis.isMapIndex">
+                 !Yaxis.isRate && !Yaxis.isFreq && !Yaxis.isNamestring"
+        class="option-table-row"><td>
+        <input type="checkbox" ng-model="Yaxis.isMapIndex"
+                               ng-change="setYaxisMapIndex()">
       </td><td>
         Y axis is a map index, 
         j=range(<input type="number" min="0" max="500" 
-                                     ng-model="Yaxis.mapIndex0">
+                                     ng-model="Yaxis.mapIndex0"
+                                     ng-change="setYaxisMapIndex()">,
         <input type="number" min="{{Yaxis.mapIndex0 + 1}}" max="500"
-                             ng-model="Yaxis.mapIndex1">)
+                             ng-model="Yaxis.mapIndex1"
+                             ng-change="setYaxisMapIndex()">)
         <div class="modal-container">
         with title
         <button type="link" class="action-link" ng-click="showModal[1] = true">
@@ -591,9 +605,10 @@
     </td><td>
       Python eval expression that returns mapped variable names:
       <div>lambda i,j,k:
-      <input type="text" name="mapFunction" ng-model="Map.functionString"
-             style="width:300px; max-width:500px;
-                    overflow-y:scroll;">
+      <input type="text" name="mapFunction"
+             style="width:300px; max-width:500px; overflow-y:scroll;"
+             ng-model="Map.functionString"
+             ng-change="setState('preload')">
       </div>
       <div ng-show="Map.functionString.length > 0">
       <button type="link" class="action-link" ng-click="mapTest()">
@@ -634,6 +649,30 @@
       and try again.
       <button type="button" class="btn btn-link modal-window-close"
               ng-click="showModal[2] = false">
+        <span class="glyphicon glyphicon-remove-sign"></span>
+      </button>
+    </div>
+    <div class="modal-window-help-string" ng-show="showModal[5]"
+         style="right:50%; bottom:0; top:auto;
+                font-weight:normal; font-size:100%">
+      No existing EPICS variables were found matching the iterable
+      expression given for the x axis variable names.
+      Please check the axis variable lists or map expression for errors
+      and try again.
+      <button type="button" class="btn btn-link modal-window-close"
+              ng-click="showModal[5] = false">
+        <span class="glyphicon glyphicon-remove-sign"></span>
+      </button>
+    </div>
+    <div class="modal-window-help-string" ng-show="showModal[6]"
+         style="right:10%; bottom:0; top:auto;
+                font-weight:normal; font-size:100%">
+      No existing EPICS variables were found matching the iterable
+      expression given for the y axis variable names.
+      Please check the axis variable lists or map expression for errors
+      and try again.
+      <button type="button" class="btn btn-link modal-window-close"
+              ng-click="showModal[6] = false">
         <span class="glyphicon glyphicon-remove-sign"></span>
       </button>
     </div>
@@ -812,6 +851,7 @@ app.controller('scalersCtrl', function($scope, $http) {
                 }
             });
         }
+        $scope.setState("preload");
     };
 
     $scope.setStartRunEnd = function() {
@@ -831,6 +871,7 @@ app.controller('scalersCtrl', function($scope, $http) {
                 }
             });
         }
+        $scope.setState("preload");
     };
 
     $scope.setEndRunStart = function() {
@@ -850,6 +891,7 @@ app.controller('scalersCtrl', function($scope, $http) {
                 }
             });
         }
+        $scope.setState("preload");
     };
 
     $scope.setEndRunEnd = function() {
@@ -869,6 +911,7 @@ app.controller('scalersCtrl', function($scope, $http) {
                 }
             });
         }
+        $scope.setState("preload");
     };
 
     $scope.setTimeSampleCount = function() {
@@ -886,6 +929,7 @@ app.controller('scalersCtrl', function($scope, $http) {
                 $scope.timeSpan.sampleWidth = delta;
             }
         }
+        $scope.setState("preload");
     };
 
     $scope.setTimeSampleWidth = function() {
@@ -893,6 +937,7 @@ app.controller('scalersCtrl', function($scope, $http) {
             $scope.timeSpan.sampleWidth = $scope.timeSpan.sampleStep;
         else if ($scope.timeSpan.sampleWidth < 1)
             $scope.timeSpan.sampleWidth = 1;
+        $scope.setState("preload");
     };
 
     $scope.setTimeSpanTimes = function() {
@@ -904,14 +949,16 @@ app.controller('scalersCtrl', function($scope, $http) {
             count = (count > 0)? count : 1;
             $scope.timeSpan.sampleCount = count;
         }
+        $scope.setState("preload");
     };
 
     $scope.getRunTimes = function(run) {
         var querystring = "?request=run_times&run=" + run.toString();
-        return $http({ method : "GET", url : querystring })
+        $http({ method : "GET", url : querystring })
         .catch(function() {
             console.log("request run_times returns error");
         });
+        $scope.setState("preload");
     };
 
     $scope.importXselection = function() {
@@ -949,6 +996,7 @@ app.controller('scalersCtrl', function($scope, $http) {
             $scope.Xaxis.names[evar.name] = evar.chan;
         }
         $scope.Xaxis.importSelection = ($scope.Xaxis.vars.length > 0);
+        $scope.setState("preload");
     };
 
     $scope.importYselection = function() {
@@ -986,6 +1034,7 @@ app.controller('scalersCtrl', function($scope, $http) {
             $scope.Yaxis.names[evar.name] = evar.chan;
         }
         $scope.Yaxis.importSelection = ($scope.Yaxis.vars.length > 0);
+        $scope.setState("preload");
     };
 
     $scope.clearXselection = function() {
@@ -993,6 +1042,7 @@ app.controller('scalersCtrl', function($scope, $http) {
         $scope.Xaxis.names = {};
         $scope.Xaxis.clearSelection = false;
         $scope.Xaxis.importSelection = false;
+        $scope.setState("preload");
     };
 
     $scope.clearYselection = function() {
@@ -1000,26 +1050,85 @@ app.controller('scalersCtrl', function($scope, $http) {
         $scope.Yaxis.names = {};
         $scope.Yaxis.clearSelection = false;
         $scope.Yaxis.importSelection = false;
+        $scope.setState("preload");
     };
 
     $scope.editXselection = function(index, flag) {
         $scope.Xaxis.vars[index].edit = flag
+        $scope.setState("preload");
     };
 
     $scope.editYselection = function(index, flag) {
         $scope.Yaxis.vars[index].edit = flag
+        $scope.setState("preload");
     };
 
     $scope.deleteXselection = function(index) {
         var evar = $scope.Xaxis.vars.splice(index, 1);
         delete $scope.Xaxis.names[evar.name];
+        $scope.setState("preload");
     };
 
     $scope.deleteYselection = function(index) {
         var evar = $scope.Yaxis.vars.splice(index, 1);
         delete $scope.Yaxis.names[evar.name];
+        $scope.setState("preload");
     };
 
+    $scope.setXaxisNamestring = function() {
+        if ($scope.Xaxis.vars.length > 0 ||
+            $scope.Xaxis.isMapIndex ||
+            $scope.Xaxis.isTime ||
+            !$scope.Xaxis.namestring ||
+            $scope.Xaxis.namestring.length == 0)
+        {
+            $scope.Xaxis.isNamestring = false;
+        }
+        $scope.setState("preload");
+    }
+
+    $scope.setXaxisMapIndex = function() {
+        if ($scope.Xaxis.vars.length > 0 ||
+            $scope.Xaxis.isTime ||
+            $scope.Xaxis.isNamestring)
+        {
+            $scope.Xaxis.isMapIndex = false;
+        }
+        if ($scope.Map.iIndex < $scope.Xaxis.mapIndex0)
+            $scope.Map.iIndex = $scope.Xaxis.mapIndex0;
+        if ($scope.Map.iIndex > $scope.Xaxis.mapIndex1 - 1)
+            $scope.Map.iIndex = $scope.Xaxis.mapIndex1 - 1;
+        $scope.setState("preload");
+    }
+
+    $scope.setYaxisNamestring = function() {
+        if ($scope.Yaxis.vars.length > 0 ||
+            $scope.Yaxis.isMapIndex ||
+            $scope.Yaxis.isRate ||
+            $scope.Yaxis.isFreq ||
+            !$scope.Yaxis.namestring ||
+            $scope.Yaxis.namestring.length == 0)
+        {
+            $scope.Yaxis.isNamestring = false;
+        }
+        $scope.setState("preload");
+    }
+
+    $scope.setYaxisMapIndex = function() {
+        if ($scope.Yaxis.vars.length > 0 ||
+            $scope.Yaxis.isRate ||
+            $scope.Yaxis.isFreq ||
+            $scope.Yaxis.isNamestring)
+        {
+            $scope.Yaxis.isMapIndex = false;
+        }
+        if ($scope.Map.jIndex < $scope.Yaxis.mapIndex0)
+            $scope.Map.jIndex = $scope.Yaxis.mapIndex0;
+        if ($scope.Map.jIndex > $scope.Yaxis.mapIndex1 - 1)
+            $scope.Map.jIndex = $scope.Yaxis.mapIndex1 - 1;
+        $scope.setState("preload");
+    }
+  
     $scope.mapTest = function() {
         var req = "?request=test_mapping";
         req += "&mapstring=" + encodeURIComponent($scope.Map.functionString);
@@ -1035,8 +1144,73 @@ app.controller('scalersCtrl', function($scope, $http) {
             });
     };
 
+    $scope.evalNamestrings = function() {
+        $scope.Xaxis.names = [];
+        $scope.Xaxis.nameTable = [];
+        if ($scope.Xaxis.isNamestring) {
+            $scope.Xaxis.namesLoaded = false;
+            var req = "?request=eval_names";
+            var i1 = $scope.Xaxis.nameCount;
+            req += "&namestring=" + encodeURIComponent($scope.Xaxis.namestring);
+            req += "&i0=0";
+            req += "&i1=" + encodeURIComponent(i1.toString());
+            $http({ method : "GET", url : req }).then(
+                function(response) {
+                    if (response.data.names)
+                        $scope.Xaxis.names = response.data.names;
+                    if (response.data.nameTable)
+                        $scope.Xaxis.nameTable =  response.data.nameTable;
+                    $scope.totalColumns += $scope.Xaxis.names.length;
+                    $scope.Xaxis.namesLoaded = true;
+                    if ($scope.Xaxis.namesLoaded && $scope.Yaxis.namesLoaded) {
+                        if ($scope.totalColumns > 1)
+                            $scope.setState("paused");
+                        else
+                            $scope.showModal[2] = true;
+                    }
+                },
+                function(response) {
+                    $scope.Xaxis.namesLoaded = true;
+                    $scope.showModal[5] = true;
+                });
+        }
+        else
+            $scope.Xaxis.namesLoaded = true;
+
+        if ($scope.Yaxis.isNamestring) {
+            $scope.Yaxis.namesLoaded = false;
+            var req = "?request=eval_names";
+            var j1 = $scope.Yaxis.nameCount;
+            req += "&namestring=" + encodeURIComponent($scope.Yaxis.namestring);
+            req += "&j0=0";
+            req += "&j1=" + encodeURIComponent(j1.toString());
+            $http({ method : "GET", url : req }).then(
+                function(response) {
+                    if (response.data.names)
+                        $scope.Yaxis.names = response.data.names;
+                    if (response.data.nameTable)
+                        $scope.Yaxis.nameTable =  response.data.nameTable;
+                    $scope.totalColumns += $scope.Yaxis.names.length;
+                    $scope.Yaxis.namesLoaded = true;
+                    if ($scope.Xaxis.namesLoaded && $scope.Yaxis.namesLoaded) {
+                        if ($scope.totalColumns > 1)
+                            $scope.setState("paused");
+                        else
+                            $scope.showModal[2] = true;
+                    }
+                },
+                function(response) {
+                    $scope.Yaxis.namesLoaded = true;
+                    $scope.showModal[6] = true;
+                });
+        }
+        else
+            $scope.Yaxis.namesLoaded = true;
+    };
+
     $scope.evalMapstring = function() {
-        $scope.Map.vars = [];
+        $scope.Map.names = [];
+        $scope.Map.nameTable = [];
         var req = "?request=eval_mapping";
         var i0 = 0;
         var i1 = 1;
@@ -1061,9 +1235,11 @@ app.controller('scalersCtrl', function($scope, $http) {
         req += "&k1=" + encodeURIComponent(k1.toString());
         $http({ method : "GET", url : req }).then(
             function(response) {
-                $scope.Map.vars = response.data.vars;
-                $scope.Map.table =  response.data.table;
-                $scope.totalColumns += $scope.Map.vars.length;
+                if (response.data.names)
+                    $scope.Map.names = response.data.names;
+                if (response.data.nameTable)
+                    $scope.Map.nameTable =  response.data.nameTable;
+                $scope.totalColumns += $scope.Map.names.length;
                 if ($scope.totalColumns > 1) {
                     $scope.setState("paused");
                 }
@@ -1072,8 +1248,6 @@ app.controller('scalersCtrl', function($scope, $http) {
                 }
             },
             function(response) {
-                $scope.Map.vars = [];
-                $scope.Map.table = [];
                 $scope.showModal[2] = true;
             });
     };
@@ -1090,6 +1264,7 @@ app.controller('scalersCtrl', function($scope, $http) {
             else
                 $scope.showModal[2] = true;
         }
+        return $scope.totalColumns;
     };
 
     $scope.getTotalRows = function() {
@@ -1111,6 +1286,9 @@ app.controller('scalersCtrl', function($scope, $http) {
     $scope.fetchPayload = function() {
     };
 
+    $scope.State = {};
+    $scope.setState("preload");
+
     $scope.EPICS = {};
     $scope.EPICS.channelPages = 0;
     $scope.EPICS.channelPageSize = 15;
@@ -1130,12 +1308,12 @@ app.controller('scalersCtrl', function($scope, $http) {
     $scope.Xaxis.vars = [];
     $scope.Xaxis.names = {};
     $scope.Xaxis.nameCount = 1;
-    $scope.Xaxis.nameString = "";
+    $scope.Xaxis.namestring = "";
     $scope.Yaxis = {};
     $scope.Yaxis.vars = [];
     $scope.Yaxis.names = {};
     $scope.Yaxis.nameCount = 1;
-    $scope.Yaxis.nameString = "";
+    $scope.Yaxis.namestring = "";
 
     $scope.Xaxis.mapIndex0 = 0;
     $scope.Xaxis.mapIndex1 = 1;
@@ -1154,15 +1332,9 @@ app.controller('scalersCtrl', function($scope, $http) {
     $scope.Sequence = {};
     $scope.Sequence.length = 1;
 
-    $scope.State = {};
-    $scope.setState("preload");
-
-    $scope.showModal = [];
-    $scope.showModal[0] = false;
-    $scope.showModal[1] = false;
-    $scope.showModal[2] = false;
-    $scope.showModal[3] = false;
-    $scope.showModal[4] = false;
+    $scope.showModal = new Array(7);
+    for (var i in $scope.showModal)
+        $scope.showModal[i] = false;
 });
 
 </script>
