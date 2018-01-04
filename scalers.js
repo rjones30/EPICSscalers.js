@@ -12,13 +12,55 @@ const mysql = require('mysql');
 const Promise = require('es6-promise').Promise;
 const child_process = require('child_process');
 
+// cache of EPICS variables kept in memory
+// consisting of parallel arrays indexed by chan_id,
+// augmented with map from variable name to chan_id.
+
+var varcache = {"name"    : [],      // map : chan_id -> name
+                "type"    : [],      // map : chan_id -> type
+                "size"    : [],      // map : chan_id -> size
+                "host_id" : [],      // map : chan_id -> host_id
+                "chan_id" : {}};     // map : name -> chan_id
+
+var myahost_id = {"opsmya0" : 0, 
+                  "opsmya1" : 1,
+                  "opsmya2" : 2,
+                  "opsmya3" : 3,
+                  "opsmya4" : 4,
+                  "opsmya5" : 5,
+                  "opsmya6" : 6,
+                  "opsmya7" : 7,
+                  "opsmya8" : 8};
+
+var myahost = [{"name":"opsmya0.acc.jlab.org", 
+                  "proxy":"gluey.phys.uconn.edu", "port": 63306},
+               {"name":"opsmya1.acc.jlab.org",
+                  "proxy":"gluey.phys.uconn.edu", "port": 63307},
+               {"name":"opsmya2.acc.jlab.org",
+                  "proxy":"gluey.phys.uconn.edu", "port": 63308},
+               {"name":"opsmya3.acc.jlab.org",
+                  "proxy":"gluey.phys.uconn.edu", "port": 63309},
+               {"name":"opsmya4.acc.jlab.org",
+                  "proxy":"gluey.phys.uconn.edu", "port": 63310},
+               {"name":"opsmya5.acc.jlab.org",
+                  "proxy":"gluey.phys.uconn.edu", "port": 63311},
+               {"name":"opsmya6.acc.jlab.org",
+                  "proxy":"gluey.phys.uconn.edu", "port": 63312},
+               {"name":"opsmya7.acc.jlab.org",
+                  "proxy":"gluey.phys.uconn.edu", "port": 63313},
+               {"name":"opsmya8.acc.jlab.org",
+                  "proxy":"gluey.phys.uconn.edu", "port": 63314}];
+
+var last_varcache_refresh = 0;
+var varcache_timeout = 21600000; // 6 hours
+
 // create a connection pool to the mya backend servers
 
 var mya_pool = [];
-for (var i=0; i < 10; ++i) {
+for (var i=0; i < 9; ++i) {
     var pool = mysql.createPool({ connectionLimit: 10, //important
-                                  host: 'gluey.phys.uconn.edu',
-                                  port: 63306 + i,
+                                  host: myahost[i].proxy,
+                                  port: myahost[i].port,
                                   user: "myapi",
                                   password: "MYA",
                                   database: "archive"});
@@ -246,7 +288,7 @@ function do_test_mapstring(req_obj) {
                '(' + i + ',' + j + ',' + k + ')';
     return pyshell_query(expr).then(function(result) {
         return {code: 200, content: result, type: 'json'};
-    }, function(err) {
+    }).catch(function(err) {
         return {code: 500, content: err, type: 'plain'};
     });
 }
@@ -273,8 +315,30 @@ function do_eval_namestring(req_obj) {
         prog = 'iterate("lambda k:' + namestring + '",' +
                '[' + k0 + '], [' + k1 + '])';
     return pyshell_query(prog).then(function(result) {
-        return {code: 200, content: result, type: 'json'};
-    }, function(err) {
+        json = JSON.parse(result);
+        json.chan_id = [];
+        for (var i in json.names) {
+            var name = json.names[i]
+            var name_valid = (name in varcache.chan_id);
+            if (!name_valid) {
+                var m1 = name.match(/\[([0-9]+)\]$/);
+                if (m1) {
+                    name = name.replace(/\[[0-9]+\]$/, '');
+                    if (name in varcache.chan_id) {
+                       var index = parseInt(m1[1]);
+                       var chan_id = varcache.chan_id[name];
+                       name_valid = (index < varcache.size[chan_id]);
+                    }
+                }
+            }
+            if (name_valid)
+                json.chan_id.push(varcache.chan_id[name]);
+            else
+                json.chan_id.push(null);
+        }
+        return {code: 200, content: JSON.stringify(json), type: 'json'};
+    }).catch(function(err) {
+        console.log("Error - " + err);
         return {code: 500, content: err, type: 'plain'};
     });
 }
@@ -294,8 +358,30 @@ function do_eval_mapstring(req_obj) {
                '[' + i0 + ',' + j0 + ',' + k0 + '],' +
                '[' + i1 + ',' + j1 + ',' + k1 + '])';
     return pyshell_query(prog).then(function(result) {
-        return {code: 200, content: result, type: 'json'};
-    }, function(err) {
+        json = JSON.parse(result);
+        json.chan_id = [];
+        for (var i in json.names) {
+            var name = json.names[i]
+            var name_valid = (name in varcache.chan_id);
+            if (!name_valid) {
+                var m1 = name.match(/\[([0-9]+)\]$/);
+                if (m1) {
+                    var basename = name.replace(/\[0-9]+\]$/, '');
+                    if (basename in varcache.chan_id) {
+                       var index = parseInt(m1[1]);
+                       var chan_id = varcache.chan_id[basename];
+                       name_valid = (index < varcache.size[chan_id]);
+                    }
+                }
+            }
+            if (name_valid)
+                json.chan_id.push(varcache.chan_id[name]);
+            else
+                json.chan_id.push(null);
+        }
+        return {code: 200, content: JSON.stringify(json), type: 'json'};
+    }).catch(function(err) {
+        console.log("Error - " + err);
         return {code: 500, content: err, type: 'plain'};
     });
 }
@@ -313,6 +399,61 @@ function readFile(filepath, encoding) {
         });
     });
 }
+
+function refresh_channels_cache() {
+    // Query the EPICS database for a list of all variables
+    // and store the complete lookup table in memory. Use a
+    // timeout to determine whether to fetch a new copy from
+    // the backend or use the existing copy in memory.
+
+    var now = (new Date).getTime();
+    if (now < last_varcache_refresh + varcache_timeout) 
+        return 0;
+
+    return new Promise(function(resolve, reject) {
+        mya_pool[0].getConnection(function(err, con) {
+            if (err) {
+                console.log("Error connecting to pool 0: " + err.message);
+                reject(err);
+                return;
+            }   
+            sql = "select chan_id, name, type, size, host" +
+                  " from channels order by chan_id;";
+            con.query(sql, function(err, result, fields) {
+                con.release();
+                if (err) {
+                    console.log("Error reading channels table" +
+                                " from pool 0: " + err.message);
+                    reject(err);
+                    return;
+                }   
+                var chan_id = 0;
+                for (var i in result) {
+                    while (chan_id < result[i].chan_id) {
+                        varcache.name.push(null);
+                        varcache.type.push(null);
+                        varcache.size.push(null);
+                        varcache.host_id.push(null);
+                        chan_id++;
+                    }
+                    var name = result[i].name;
+                    var type = result[i].type;
+                    var size = result[i].size;
+                    var host = result[i].host;
+                    varcache.name.push(name);
+                    varcache.type.push(type);
+                    varcache.size.push(size);
+                    varcache.host_id.push(myahost_id[result[i].host]);
+                    varcache.chan_id[name] = chan_id;
+                    chan_id++;
+                }
+                resolve();
+            });
+        });
+    });
+}
+
+refresh_channels_cache();
 
 http.createServer(function (req, res) {
     // This is the main web server event listener.
@@ -374,7 +515,7 @@ http.createServer(function (req, res) {
         }
         content.then(function(text) {
             send_response({code: code, content: text, type: type});
-        }, function(err) {
+        }).catch(function(err) {
             send_response({code: 404, content: err, type: 'plain'});
         });
     }

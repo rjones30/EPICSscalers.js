@@ -247,10 +247,11 @@
         </button>
       </div>
       <span style="display:inline-block">
-      <input type="text" ng-model="Xaxis.namestring"> for
-      i in range(0,<input type="number" min="1" max="500" step="1"
-                                        ng-model="Xaxis.nameCount"
-                                        ng-change="setState('preload')">)
+      <input type="text" ng-model="Xaxis.namestring"
+                         ng-change="setState('preload')">
+      for i in range(0,<input type="number" min="1" max="500" step="1"
+                                            ng-model="Xaxis.nameCount"
+                                            ng-change="setState('preload')">)
       </span>
     </td></tr>
 
@@ -445,10 +446,11 @@
         </button>
       </div>
       <span style="display:inline-block">
-      <input type="text" ng-model="Yaxis.namestring"> for
-      j in range(0,<input type="number" min="1" max="500" step="1"
-                                        ng-model="Yaxis.nameCount"
-                                        ng-change="setState('preload')">)
+      <input type="text" ng-model="Yaxis.namestring"
+                         ng-change="setState('preload')">
+      for j in range(0,<input type="number" min="1" max="500" step="1"
+                                            ng-model="Yaxis.nameCount"
+                                            ng-change="setState('preload')">)
       </span>
     </td></tr>
 
@@ -835,9 +837,10 @@ app.controller('scalersCtrl', function($scope, $http) {
     };
 
     $scope.setStartRunStart = function() {
+        $scope.setState("preload");
         if ($scope.timeSpan.runStart) {
-            $scope.getRunTimes($scope.timeSpan.runStart).then(function(response)
-            {
+            $scope.getRunTimes($scope.timeSpan.runStart)
+            .then(function(response) {
                 if (response.data.starttime) {
                     var t = response.data.starttime;
                     $scope.timeSpan.timeStart = new Date(t * 1000);
@@ -851,13 +854,13 @@ app.controller('scalersCtrl', function($scope, $http) {
                 }
             });
         }
-        $scope.setState("preload");
     };
 
     $scope.setStartRunEnd = function() {
+        $scope.setState("preload");
         if ($scope.timeSpan.runStart) {
-            $scope.getRunTimes($scope.timeSpan.runStart).then(function(response)
-            {
+            $scope.getRunTimes($scope.timeSpan.runStart)
+            .then(function(response) {
                 if (response.data.endtime) {
                     var t = response.data.endtime;
                     $scope.timeSpan.timeStart = new Date(t * 1000);
@@ -871,13 +874,13 @@ app.controller('scalersCtrl', function($scope, $http) {
                 }
             });
         }
-        $scope.setState("preload");
     };
 
     $scope.setEndRunStart = function() {
+        $scope.setState("preload");
         if ($scope.timeSpan.runEnd) {
-            $scope.getRunTimes($scope.timeSpan.runEnd).then(function(response)
-            {
+            $scope.getRunTimes($scope.timeSpan.runEnd)
+            .then(function(response) {
                 if (response.data.starttime) {
                     var t = response.data.starttime;
                     $scope.timeSpan.timeEnd = new Date(t * 1000);
@@ -891,13 +894,13 @@ app.controller('scalersCtrl', function($scope, $http) {
                 }
             });
         }
-        $scope.setState("preload");
     };
 
     $scope.setEndRunEnd = function() {
+        $scope.setState("preload");
         if ($scope.timeSpan.runEnd) {
-            $scope.getRunTimes($scope.timeSpan.runEnd).then(function(response)
-            {
+            $scope.getRunTimes($scope.timeSpan.runEnd)
+            .then(function(response) {
                 if (response.data.endtime) {
                     var t = response.data.endtime;
                     $scope.timeSpan.timeEnd = new Date(t * 1000);
@@ -911,10 +914,10 @@ app.controller('scalersCtrl', function($scope, $http) {
                 }
             });
         }
-        $scope.setState("preload");
     };
 
     $scope.setTimeSampleCount = function() {
+        $scope.setState("preload");
         var duration = ($scope.timeSpan.timeEnd.getTime() - 
                         $scope.timeSpan.timeStart.getTime()) / 1000;
         if (duration > 0) {
@@ -929,18 +932,18 @@ app.controller('scalersCtrl', function($scope, $http) {
                 $scope.timeSpan.sampleWidth = delta;
             }
         }
-        $scope.setState("preload");
     };
 
     $scope.setTimeSampleWidth = function() {
+        $scope.setState("preload");
         if ($scope.timeSpan.sampleWidth > $scope.timeSpan.sampleStep)
             $scope.timeSpan.sampleWidth = $scope.timeSpan.sampleStep;
         else if ($scope.timeSpan.sampleWidth < 1)
             $scope.timeSpan.sampleWidth = 1;
-        $scope.setState("preload");
     };
 
     $scope.setTimeSpanTimes = function() {
+        $scope.setState("preload");
         var duration = ($scope.timeSpan.timeEnd.getTime() -
                         $scope.timeSpan.timeStart.getTime()) / 1000;
         if (duration > 0) {
@@ -949,19 +952,19 @@ app.controller('scalersCtrl', function($scope, $http) {
             count = (count > 0)? count : 1;
             $scope.timeSpan.sampleCount = count;
         }
-        $scope.setState("preload");
     };
 
     $scope.getRunTimes = function(run) {
+        $scope.setState("preload");
         var querystring = "?request=run_times&run=" + run.toString();
-        $http({ method : "GET", url : querystring })
+        return $http({ method : "GET", url : querystring })
         .catch(function() {
             console.log("request run_times returns error");
         });
-        $scope.setState("preload");
     };
 
     $scope.importXselection = function() {
+        $scope.setState("preload");
         $scope.Xaxis.importTruncated = 0;
         var dupslist = [];
         var addcount = 0;
@@ -996,10 +999,10 @@ app.controller('scalersCtrl', function($scope, $http) {
             $scope.Xaxis.names[evar.name] = evar.chan;
         }
         $scope.Xaxis.importSelection = ($scope.Xaxis.vars.length > 0);
-        $scope.setState("preload");
     };
 
     $scope.importYselection = function() {
+        $scope.setState("preload");
         $scope.Yaxis.importTruncated = 0;
         var dupslist = [];
         var addcount = 0;
@@ -1034,48 +1037,48 @@ app.controller('scalersCtrl', function($scope, $http) {
             $scope.Yaxis.names[evar.name] = evar.chan;
         }
         $scope.Yaxis.importSelection = ($scope.Yaxis.vars.length > 0);
-        $scope.setState("preload");
     };
 
     $scope.clearXselection = function() {
+        $scope.setState("preload");
         $scope.Xaxis.vars = [];
         $scope.Xaxis.names = {};
         $scope.Xaxis.clearSelection = false;
         $scope.Xaxis.importSelection = false;
-        $scope.setState("preload");
     };
 
     $scope.clearYselection = function() {
+        $scope.setState("preload");
         $scope.Yaxis.vars = [];
         $scope.Yaxis.names = {};
         $scope.Yaxis.clearSelection = false;
         $scope.Yaxis.importSelection = false;
-        $scope.setState("preload");
     };
 
     $scope.editXselection = function(index, flag) {
-        $scope.Xaxis.vars[index].edit = flag
         $scope.setState("preload");
+        $scope.Xaxis.vars[index].edit = flag
     };
 
     $scope.editYselection = function(index, flag) {
-        $scope.Yaxis.vars[index].edit = flag
         $scope.setState("preload");
+        $scope.Yaxis.vars[index].edit = flag
     };
 
     $scope.deleteXselection = function(index) {
+        $scope.setState("preload");
         var evar = $scope.Xaxis.vars.splice(index, 1);
         delete $scope.Xaxis.names[evar.name];
-        $scope.setState("preload");
     };
 
     $scope.deleteYselection = function(index) {
+        $scope.setState("preload");
         var evar = $scope.Yaxis.vars.splice(index, 1);
         delete $scope.Yaxis.names[evar.name];
-        $scope.setState("preload");
     };
 
     $scope.setXaxisNamestring = function() {
+        $scope.setState("preload");
         if ($scope.Xaxis.vars.length > 0 ||
             $scope.Xaxis.isMapIndex ||
             $scope.Xaxis.isTime ||
@@ -1084,10 +1087,10 @@ app.controller('scalersCtrl', function($scope, $http) {
         {
             $scope.Xaxis.isNamestring = false;
         }
-        $scope.setState("preload");
     }
 
     $scope.setXaxisMapIndex = function() {
+        $scope.setState("preload");
         if ($scope.Xaxis.vars.length > 0 ||
             $scope.Xaxis.isTime ||
             $scope.Xaxis.isNamestring)
@@ -1098,10 +1101,10 @@ app.controller('scalersCtrl', function($scope, $http) {
             $scope.Map.iIndex = $scope.Xaxis.mapIndex0;
         if ($scope.Map.iIndex > $scope.Xaxis.mapIndex1 - 1)
             $scope.Map.iIndex = $scope.Xaxis.mapIndex1 - 1;
-        $scope.setState("preload");
     }
 
     $scope.setYaxisNamestring = function() {
+        $scope.setState("preload");
         if ($scope.Yaxis.vars.length > 0 ||
             $scope.Yaxis.isMapIndex ||
             $scope.Yaxis.isRate ||
@@ -1111,10 +1114,10 @@ app.controller('scalersCtrl', function($scope, $http) {
         {
             $scope.Yaxis.isNamestring = false;
         }
-        $scope.setState("preload");
     }
 
     $scope.setYaxisMapIndex = function() {
+        $scope.setState("preload");
         if ($scope.Yaxis.vars.length > 0 ||
             $scope.Yaxis.isRate ||
             $scope.Yaxis.isFreq ||
@@ -1126,7 +1129,6 @@ app.controller('scalersCtrl', function($scope, $http) {
             $scope.Map.jIndex = $scope.Yaxis.mapIndex0;
         if ($scope.Map.jIndex > $scope.Yaxis.mapIndex1 - 1)
             $scope.Map.jIndex = $scope.Yaxis.mapIndex1 - 1;
-        $scope.setState("preload");
     }
   
     $scope.mapTest = function() {
@@ -1135,77 +1137,63 @@ app.controller('scalersCtrl', function($scope, $http) {
         req += "&i=" + encodeURIComponent($scope.Map.iIndex.toString());
         req += "&j=" + encodeURIComponent($scope.Map.jIndex.toString());
         req += "&k=" + encodeURIComponent($scope.Map.kIndex.toString());
-        $http({ method : "GET", url : req }).then(
-            function(response) {
-                $scope.Map.testResult = response.data;
-            },
-            function(response) {
-                $scope.Map.testResult = "SERVER ERROR"
-            });
+        $http({ method : "GET", url : req })
+        .then(function(response) {
+            $scope.Map.testResult = response.data;
+        }, function(response) {
+            $scope.Map.testResult = "SERVER ERROR"
+        });
     };
 
     $scope.evalNamestrings = function() {
         $scope.Xaxis.names = [];
         $scope.Xaxis.nameTable = [];
+        var act = Promise.resolve(true);
         if ($scope.Xaxis.isNamestring) {
-            $scope.Xaxis.namesLoaded = false;
-            var req = "?request=eval_names";
-            var i1 = $scope.Xaxis.nameCount;
-            req += "&namestring=" + encodeURIComponent($scope.Xaxis.namestring);
-            req += "&i0=0";
-            req += "&i1=" + encodeURIComponent(i1.toString());
-            $http({ method : "GET", url : req }).then(
-                function(response) {
-                    if (response.data.names)
-                        $scope.Xaxis.names = response.data.names;
-                    if (response.data.nameTable)
-                        $scope.Xaxis.nameTable =  response.data.nameTable;
-                    $scope.totalColumns += $scope.Xaxis.names.length;
-                    $scope.Xaxis.namesLoaded = true;
-                    if ($scope.Xaxis.namesLoaded && $scope.Yaxis.namesLoaded) {
-                        if ($scope.totalColumns > 1)
-                            $scope.setState("paused");
-                        else
-                            $scope.showModal[2] = true;
-                    }
-                },
-                function(response) {
-                    $scope.Xaxis.namesLoaded = true;
-                    $scope.showModal[5] = true;
-                });
+            act = act.then(function(x) {
+                var req = "?request=eval_names";
+                var i1 = $scope.Xaxis.nameCount;
+                var ns = $scope.Xaxis.namestring;
+                req += "&namestring=" + encodeURIComponent(ns);
+                req += "&i0=0";
+                req += "&i1=" + encodeURIComponent(i1.toString());
+                return $http({ method : "GET", url : req });
+            }).then(function(response) {
+                if (response.data.names)
+                    $scope.Xaxis.names = response.data.names;
+                if (response.data.nameTable)
+                    $scope.Xaxis.nameTable =  response.data.nameTable;
+                if (response.data.chan_id) {
+                    for (var i in response.data.names)
+                        if (response.data.chan_id[i])
+                            $scope.totalColumns++;
+                }
+                return true;
+            });
         }
-        else
-            $scope.Xaxis.namesLoaded = true;
-
         if ($scope.Yaxis.isNamestring) {
-            $scope.Yaxis.namesLoaded = false;
-            var req = "?request=eval_names";
-            var j1 = $scope.Yaxis.nameCount;
-            req += "&namestring=" + encodeURIComponent($scope.Yaxis.namestring);
-            req += "&j0=0";
-            req += "&j1=" + encodeURIComponent(j1.toString());
-            $http({ method : "GET", url : req }).then(
-                function(response) {
-                    if (response.data.names)
-                        $scope.Yaxis.names = response.data.names;
-                    if (response.data.nameTable)
-                        $scope.Yaxis.nameTable =  response.data.nameTable;
-                    $scope.totalColumns += $scope.Yaxis.names.length;
-                    $scope.Yaxis.namesLoaded = true;
-                    if ($scope.Xaxis.namesLoaded && $scope.Yaxis.namesLoaded) {
-                        if ($scope.totalColumns > 1)
-                            $scope.setState("paused");
-                        else
-                            $scope.showModal[2] = true;
-                    }
-                },
-                function(response) {
-                    $scope.Yaxis.namesLoaded = true;
-                    $scope.showModal[6] = true;
-                });
+            act = act.then(function(x) {
+                var req = "?request=eval_names";
+                var j1 = $scope.Yaxis.nameCount;
+                var ns = $scope.Yaxis.namestring;
+                req += "&namestring=" + encodeURIComponent(ns);
+                req += "&j0=0";
+                req += "&j1=" + encodeURIComponent(j1.toString());
+                return $http({ method : "GET", url : req });
+            }).then(function(response) {
+                if (response.data.names)
+                    $scope.Yaxis.names = response.data.names;
+                if (response.data.nameTable)
+                    $scope.Yaxis.nameTable =  response.data.nameTable;
+                if (response.data.chan_id) {
+                    for (var i in response.data.names)
+                        if (response.data.chan_id[i])
+                            $scope.totalColumns++;
+                }
+                return true;
+            });
         }
-        else
-            $scope.Yaxis.namesLoaded = true;
+        return act;
     };
 
     $scope.evalMapstring = function() {
@@ -1226,50 +1214,65 @@ app.controller('scalersCtrl', function($scope, $http) {
         }
         var k0 = 0;
         var k1 = $scope.Sequence.length;
-        req += "&mapstring=" + encodeURIComponent($scope.Map.functionString);
+        var fs = $scope.Map.functionString;
+        req += "&mapstring=" + encodeURIComponent(fs);
         req += "&i0=" + encodeURIComponent(i0.toString());
         req += "&i1=" + encodeURIComponent(i1.toString());
         req += "&j0=" + encodeURIComponent(j0.toString());
         req += "&j1=" + encodeURIComponent(j1.toString());
         req += "&k0=" + encodeURIComponent(k0.toString());
         req += "&k1=" + encodeURIComponent(k1.toString());
-        $http({ method : "GET", url : req }).then(
-            function(response) {
-                if (response.data.names)
-                    $scope.Map.names = response.data.names;
-                if (response.data.nameTable)
-                    $scope.Map.nameTable =  response.data.nameTable;
-                $scope.totalColumns += $scope.Map.names.length;
-                if ($scope.totalColumns > 1) {
-                    $scope.setState("paused");
-                }
-                else {
-                    $scope.showModal[2] = true;
-                }
-            },
-            function(response) {
-                $scope.showModal[2] = true;
-            });
+        return $http({ method : "GET", url : req })
+        .then(function(response) {
+            if (response.data.names)
+                $scope.Map.names = response.data.names;
+            if (response.data.nameTable)
+                $scope.Map.nameTable =  response.data.nameTable;
+            if (response.data.chan_id) {
+                for (var i in response.data.names)
+                    if (response.data.chan_id[i])
+                        $scope.totalColumns++;
+            }
+        });
+    };
+
+    $scope.getXaxisVarsCount = function() {
+        var count = 0;
+        for (var i in $scope.Xaxis.vars)
+            count += $scope.Xaxis.vars[i].size;
+        return Promise.resolve(count);
+    };
+
+    $scope.getYaxisVarsCount = function() {
+        var count = 0;
+        for (var i in $scope.Yaxis.vars)
+            count += $scope.Yaxis.vars[i].size;
+        return Promise.resolve(count);
     };
 
     $scope.getTotalColumns = function() {
         $scope.totalColumns = 1;
-        $scope.totalColumns += $scope.Xaxis.vars.length;
-        $scope.totalColumns += $scope.Yaxis.vars.length;
-        if ($scope.totalColumns == 1) {
-            if ($scope.Xaxis.isNamestring || $scope.Yaxis.isNamestring)
-                $scope.evalNamestrings();
+        return $scope.getXaxisVarsCount()
+        .then(function(result) {
+            $scope.totalColumns += result;
+            return $scope.getYaxisVarsCount();
+        }).then(function(result) {
+            $scope.totalColumns += result;
+            if ($scope.totalColumns > 1)
+                return $scope.totalColumns;
+            else if ($scope.Xaxis.isNamestring || $scope.Yaxis.isNamestring)
+                return $scope.evalNamestrings();
             else if ($scope.Xaxis.isMapIndex || $scope.Yaxis.isMapIndex)
-                $scope.evalMapstring();
+                return $scope.evalMapstring();
             else
-                $scope.showModal[2] = true;
-        }
-        return $scope.totalColumns;
+                return 0;
+        });
     };
 
     $scope.getTotalRows = function() {
-        return $scope.timeSpan.sampleCount * 
-               $scope.timeSpan.sampleWidth;
+        $scope.totalRows = $scope.timeSpan.sampleCount * 
+                           $scope.timeSpan.sampleWidth;
+        return Promise.resolve($scope.totalRows);
     };
 
     $scope.setState = function(new_state) {
@@ -1279,8 +1282,17 @@ app.controller('scalersCtrl', function($scope, $http) {
     }
 
     $scope.getPayload = function() {
-        $scope.totalRows = $scope.getTotalRows();
-        $scope.totalColumns = $scope.getTotalColumns();
+        $scope.getTotalRows()
+        .then(function() {
+            return $scope.getTotalColumns();
+        })
+        .then(function() {
+            if ($scope.totalColumns > 1)
+                $scope.setState('paused');
+            else
+                $scope.showModal[2] = true;
+            $scope.$apply();
+        });
     };
 
     $scope.fetchPayload = function() {
