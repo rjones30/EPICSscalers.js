@@ -142,6 +142,9 @@
     (1e5 * timeSpan.sampleCount * timeSpan.sampleWidth / 
     (timeSpan.timeEnd.getTime() - timeSpan.timeStart.getTime())).toPrecision(3)
   }}%.
+  <br/>
+  EPICS time is from {{ timeSpan.timeStart.getTime()*256*256*256*16 }}
+                  to {{ timeSpan.timeEnd.getTime()*256*256*256*16 }}
   </p>
   </div>
 </div>
