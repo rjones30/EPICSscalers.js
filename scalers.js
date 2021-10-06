@@ -177,7 +177,15 @@ function do_groups_list(req_obj) {
             }   
             sql = "select group_id, name from groups" +
                   " where name like 'HD_%' or name = 'bpm'" +
-                  " or name like 'HallD%' or name = 'utilityMeters';"
+                  " or name like 'bcm%'" +
+                  " or name like 'HallD%'" +
+                  " or name like 'COLLIMATOR%'" +
+                  " or name like 'PROFILER%'" +
+                  " or name like 'tag%'" +
+                  " or name like 'Tag%'" +
+                  " or name like 'TAG%'" +
+                  " or name like 'magnets%'" +
+                  " or name = 'utilityMeters';"
             con.query(sql, function(err, result, fields) {
                 con.release();
                 if (err) {
