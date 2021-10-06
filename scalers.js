@@ -62,7 +62,7 @@ for (var i=0; i < 9; ++i) {
                                   host: myahost[i].proxy,
                                   port: myahost[i].port,
                                   user: "myapi",
-                                  password: "MYA",
+                                  password: "<redacted>",
                                   database: "archive"});
     mya_pool.push(pool);
 }
